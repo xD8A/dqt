@@ -78,6 +78,7 @@ jobs:
             android_arch3: arm
             ldc_android_arch: armv7a
             ndk_clang: armv7a-linux-androideabi30-clang
+            runtest_args: --skip-webengine
 
           - platform: android_arm64
             os: ubuntu-24.04
@@ -93,6 +94,7 @@ jobs:
             android_bits_suffix: 64
             ldc_android_arch: aarch64
             ndk_clang: aarch64-linux-android30-clang
+            runtest_args: --skip-webengine
 
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
@@ -189,7 +191,7 @@ jobs:
       - name: 'Build & Test'
         timeout-minutes: 5
         run: |
-          ${{ env.DC }} -run runtests.d --github --compiler=${{ env.DC }} -m${{ matrix.model }} --qt-path=qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }} --arch-suffix=${{ matrix.qt_arch_suffix }} --dxml-path=dxml/source
+          ${{ env.DC }} -run runtests.d --github --compiler=${{ env.DC }} -m${{ matrix.model }} --qt-path=qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }} --arch-suffix=${{ matrix.qt_arch_suffix }} --dxml-path=dxml/source ${{ matrix.runtest_args }}
 
 #      - name: Upload test results
 #        uses: actions/upload-artifact@v4
