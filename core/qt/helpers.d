@@ -398,6 +398,12 @@ version (Windows)
                     {
                         break;
                     }
+                    else if (i + 1 < mangling.length && mangling[i] >= '0'
+                            && mangling[i] <= '9' && mangling[i + 1] == '@')
+                    {
+                        i += 2;
+                        break;
+                    }
                     else
                     {
                         enforce(mangling[i] == '@' || mangling[i] == '_' || isAlphaNum(mangling[i]),
@@ -440,6 +446,11 @@ version (Windows)
                     enforce(mangling[i] == '@' || mangling[i] == '_' || isAlphaNum(mangling[i]),
                             text("Unexpected mangling ", __FILE__, ":", __LINE__,
                                 ": ", mangling[0 .. i], " | ", mangling[i .. $]));
+                    if (mangling[i] >= '0' && mangling[i] <= '9' && mangling[i + 1] == '@')
+                    {
+                        i += 2;
+                        break;
+                    }
                     if (mangling[i] == '@' && mangling[i + 1] == '@')
                     {
                         i += 2;

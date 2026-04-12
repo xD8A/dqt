@@ -32,6 +32,16 @@
 			"dependencies": {"dqt:core":"*"}
 		},
 		{
+			"name": "test",
+			"targetType": "library",
+			"sourcePaths": ["test"],
+			"importPaths": ["test"],
+			"libs-linux": ["Qt5Test"],
+			"libs-windows": ["Qt5Test"],
+			"lflags-osx": ["-framework", "QtTest"],
+			"dependencies": {"dqt:gui":"*"}
+		},
+		{
 			"name": "widgets",
 			"targetType": "library",
 			"sourcePaths": ["widgets"],

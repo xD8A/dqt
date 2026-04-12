@@ -54,7 +54,7 @@ public:
 
     /+ virtual +/ QVariant data(int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1) const;
     /+ virtual +/ void setData(ref const(QVariant) value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1);
-    /+ virtual +/ void setData(T)(T value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1)
+    extern(D) void setData(T)(T value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1)
     {
         static if (is(const(T) == const(QVariant)))
             QVariant v = value;
@@ -313,6 +313,14 @@ public:
 
     override QVariant data(ref const(QModelIndex) index, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.DisplayRole) const;
     override bool setData(ref const(QModelIndex) index, ref const(QVariant) value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.EditRole);
+    extern(D) bool setData(T)(auto ref const(QModelIndex) index, T value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1)
+    {
+        static if (is(const(T) == const(QVariant)))
+            QVariant v = value;
+        else
+            QVariant v = QVariant.fromValue(value);
+        return setData(index, v, role);
+    }
     // Qt 6: add override keyword
     final bool clearItemData(ref const(QModelIndex) index);
 

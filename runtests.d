@@ -176,9 +176,13 @@ int main(string[] args)
     moduleDependencies["quickcontrols2"] = ["quick"];
     moduleDependencies["webenginecore"] = ["gui", "network"];
     moduleDependencies["webenginewidgets"] = ["webenginecore", "widgets"];
+    moduleDependencies["test"] = ["gui"];
 
     immutable allQtModules = [
-        "Core", "Gui", "Widgets", "Network", "Qml", "Quick", "QuickControls2", "WebEngineCore", "WebEngineWidgets"
+        "Core", "Gui", "Widgets", "Network",
+        "Qml", "Quick", "QuickControls2",
+        "WebEngineCore", "WebEngineWidgets",
+        "Test"
     ];
     string getCapitalizedModuleName(string m)
     {
@@ -367,6 +371,8 @@ int main(string[] args)
             {
                 canTest = false;
                 anyFailure = true;
+                if (!allQtModules.canFind(getCapitalizedModuleName(m)))
+                    stderr.writeln("Test ", test.name, " depends on unknown Qt module ", m);
             }
 
         if (model.canFind("android") && test.name.canFind("webengine"))

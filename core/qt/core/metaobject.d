@@ -147,15 +147,25 @@ public:
 
     pragma(inline, true) bool isValid() const { return mobj !is null; }
 
-    /+ template <typename PointerToMemberFunction> +/
-    /+ static inline QMetaMethod fromSignal(PointerToMemberFunction signal)
+    extern(D) pragma(inline, true) static QMetaMethod fromSignal(Signal)(Signal sender) if (is(Signal: DQtMember!P, P...))
     {
-        typedef QtPrivate::FunctionPointer<PointerToMemberFunction> SignalType;
-        Q_STATIC_ASSERT_X(QtPrivate::HasQ_OBJECT_Macro<typename SignalType::Object>::Value,
-                          "No Q_OBJECT in the class with the signal");
-        return fromSignalImpl(&SignalType::Object::staticMetaObject,
-                              reinterpret_cast<void **>(&signal));
-    } +/
+        import qt.core.global;
+        import qt.core.metamacros;
+
+        /*alias SignalType = /+ QtPrivate:: +/FunctionPointer!(PointerToMemberFunction);
+        mixin(Q_STATIC_ASSERT_X(q{/+ QtPrivate:: +/qt.core.objectdefs.HasQ_OBJECT_Macro!(SignalType.Object).Value},
+                              q{"No Q_OBJECT in the class with the signal"}));*/
+
+        static assert(Signal.Members.length == 1);
+
+        auto signal = getMemberFunctionAddress!(Signal.Members[0]);
+
+        // TODO: ABI for virtual functions is different.
+        CPPMemberFunctionPointer!(Signal.Type) memberFunction = CPPMemberFunctionPointer!(Signal.Type)(signal);
+
+        return fromSignalImpl(&Signal.Type.staticMetaObject,
+                              reinterpret_cast!(void**)(&memberFunction));
+    }
 
 private:
 /+ #if QT_DEPRECATED_SINCE(5,0)
