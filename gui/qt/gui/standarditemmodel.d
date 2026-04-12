@@ -55,7 +55,7 @@ public:
     /+ virtual +/ QVariant data(int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1) const;
     /+ virtual +/ void multiData(QModelRoleDataSpan roleDataSpan) const;
     /+ virtual +/ void setData(ref const(QVariant) value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1);
-    /+ virtual +/ void setData(T)(T value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1)
+    extern(D) void setData(T)(T value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1)
     {
         static if (is(const(T) == const(QVariant)))
             QVariant v = value;
@@ -301,6 +301,14 @@ public:
     override QVariant data(ref const(QModelIndex) index, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.DisplayRole) const;
     override void multiData(ref const(QModelIndex) index, QModelRoleDataSpan roleDataSpan) const;
     override bool setData(ref const(QModelIndex) index, ref const(QVariant) value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.EditRole);
+    extern(D) bool setData(T)(auto ref const(QModelIndex) index, T value, int role = /+ Qt:: +/qt.core.namespace.ItemDataRole.UserRole + 1)
+    {
+        static if (is(const(T) == const(QVariant)))
+            QVariant v = value;
+        else
+            QVariant v = QVariant.fromValue(value);
+        return setData(index, v, role);
+    }
     override bool clearItemData(ref const(QModelIndex) index);
 
     override QVariant headerData(int section, /+ Qt:: +/qt.core.namespace.Orientation orientation,

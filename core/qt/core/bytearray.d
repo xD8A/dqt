@@ -89,11 +89,11 @@ alias Base64Options = QFlags!(Base64Option);
     this(const(char)* , qsizetype size = -1);
     this(qsizetype size, char c);
     this(qsizetype size, /+ Qt:: +/qt.core.namespace.Initialization);
-    /+@disable this(this);
+    @disable this(this);
     pragma(inline, true) this(ref const(QByteArray) a) nothrow
     {
-        this.d = a.d;
-    }+/
+        this.d = *cast(DataPointer*)&a.d;
+    }
     pragma(inline, true) ~this() {}
 
     ref QByteArray opAssign(ref const(QByteArray) ) nothrow;

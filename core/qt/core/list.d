@@ -469,25 +469,25 @@ public:
     }
 
     pragma(inline, true) qsizetype capacity() const { return qsizetype(d.constAllocatedCapacity()); }
-/+    void reserve(qsizetype asize)
+    void reserve(qsizetype asize)
     {
         // capacity() == 0 for immutable data, so this will force a detaching below
         if (asize <= capacity() - d.freeSpaceAtBegin()) {
-            if (d.flags() & Data.CapacityReserved)
+            if (d.flags() & Data.ArrayOption.CapacityReserved)
                 return;  // already reserved, don't shrink
             if (!d.isShared()) {
                 // accept current allocation, don't shrink
-                d.setFlag(Data.CapacityReserved);
+                d.setFlag(Data.ArrayOptions.CapacityReserved);
                 return;
             }
         }
 
         auto detached = DataPointer(Data.allocate(qMax(asize, size())));
-        detached.copyAppend(d.begin(), d.end());
+        DataOps.copyAppend(detached, d.begin(), d.end());
         if (detached.d_ptr())
-            detached.setFlag(Data.CapacityReserved);
+            detached.setFlag(Data.ArrayOptions.CapacityReserved);
         d.swap(detached);
-    }+/
+    }
 /+    pragma(inline, true) void squeeze()
     {
         if (!d.isMutable())

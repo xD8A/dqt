@@ -190,13 +190,15 @@ int main(string[] args)
     moduleDependencies["multimediawidgets"] = ["multimedia", "widgets"];
     moduleDependencies["pdf"] = ["gui"];
     moduleDependencies["pdfwidgets"] = ["pdf", "widgets"];
+    moduleDependencies["test"] = ["gui"];
 
     immutable allQtModules = [
         "Core", "Gui", "Widgets", "Network",
         "Qml", "Quick", "QuickControls2",
         "WebEngineCore", "WebEngineWidgets",
         "Multimedia", "MultimediaWidgets",
-        "Pdf", "PdfWidgets"
+        "Pdf", "PdfWidgets",
+        "Test"
     ];
     string getCapitalizedModuleName(string m)
     {
@@ -400,6 +402,8 @@ int main(string[] args)
             {
                 canTest = false;
                 anyFailure = true;
+                if (!allQtModules.canFind(getCapitalizedModuleName(m)))
+                    stderr.writeln("Test ", test.name, " depends on unknown Qt module ", m);
             }
 
         if (skipWebEngine && test.name.canFind("webengine"))

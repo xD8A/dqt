@@ -138,7 +138,7 @@ private:
 extern(C++, class) struct /+ Q_CORE_EXPORT +/ QGenericReturnArgument
 {
     public QGenericArgument base0;
-    alias base0 this;
+    //alias base0 this;
 public:
     pragma(inline, true) this(const(char)* aName/+ = null+/, void* aData = null)
     {
@@ -207,6 +207,7 @@ struct /+ Q_CORE_EXPORT +/ QMetaObject
         // code using copy-init (e.g. `bool ok = connect(...)`)
         alias RestrictedBool = void*/+ Connection::* +/*;
         /+auto opCast(T : RestrictedBool)() const { return d_ptr && isConnected_helper() ? &Connection.d_ptr : null; }+/
+        bool toBool() const { return d_ptr && isConnected_helper(); }
     /+ #endif +/
 
         /+ Connection(Connection &&other) noexcept : d_ptr(qExchange(other.d_ptr, nullptr)) {} +/
@@ -268,12 +269,16 @@ struct /+ Q_CORE_EXPORT +/ QMetaObject
     static QByteArray normalizedType(const(char)* type);
 
     // internal index-based connect
-    /+ static Connection connect(const QObject *sender, int signal_index,
-                        const QObject *receiver, int method_index,
-                        int type = 0, int *types = nullptr); +/
+    mixin(changeWindowsMangling(q{mangleClassesTailConst}, q{
+    static Connection connect(const(QObject) sender, int signal_index,
+                            const(QObject) receiver, int method_index,
+                            int type = 0, int* types = null);
+    }));
     // internal index-based disconnect
-    /+ static bool disconnect(const QObject *sender, int signal_index,
-                           const QObject *receiver, int method_index); +/
+    mixin(changeWindowsMangling(q{mangleClassesTailConst}, q{
+    static bool disconnect(const(QObject) sender, int signal_index,
+                               const(QObject) receiver, int method_index);
+    }));
     mixin(changeWindowsMangling(q{mangleClassesTailConst}, q{
     static bool disconnectOne(const(QObject) sender, int signal_index,
                                   const(QObject) receiver, int method_index);
@@ -317,7 +322,7 @@ struct /+ Q_CORE_EXPORT +/ QMetaObject
                 val4, val5, val6, val7, val8, val9);
     }
 
-/+    pragma(inline, true) static bool invokeMethod(QObject obj, const(char)* member,
+    pragma(inline, true) static bool invokeMethod(QObject obj, const(char)* member,
                                  /+ Qt:: +/qt.core.namespace.ConnectionType type,
                                  QGenericArgument val0 = QGenericArgument(null),
                                  QGenericArgument val1 = QGenericArgument(),
@@ -332,9 +337,9 @@ struct /+ Q_CORE_EXPORT +/ QMetaObject
     {
         return invokeMethod(obj, member, type, QGenericReturnArgument(), val0, val1, val2,
                                  val3, val4, val5, val6, val7, val8, val9);
-    }+/
+    }
 
-/+    pragma(inline, true) static bool invokeMethod(QObject obj, const(char)* member,
+    pragma(inline, true) static bool invokeMethod(QObject obj, const(char)* member,
                                  QGenericArgument val0 = QGenericArgument(null),
                                  QGenericArgument val1 = QGenericArgument(),
                                  QGenericArgument val2 = QGenericArgument(),
@@ -348,7 +353,7 @@ struct /+ Q_CORE_EXPORT +/ QMetaObject
     {
         return invokeMethod(obj, member, /+ Qt:: +/qt.core.namespace.ConnectionType.AutoConnection, QGenericReturnArgument(), val0,
                 val1, val2, val3, val4, val5, val6, val7, val8, val9);
-    }+/
+    }
 
 /+ #ifdef Q_CLANG_QDOC
     template<typename Functor, typename FunctorReturnType>
