@@ -280,7 +280,9 @@ version (Windows)
             {
                 enforce(i + 1 < mangling.length, text("Unexpected mangling ",
                         __FILE__, ":", __LINE__, ": ", mangling[0 .. i], " | ", mangling[i .. $]));
-                if (mangling[i + 1] == 'N')
+                if ((mangling[i + 1] >= 'D' && mangling[i + 1] <= 'N')
+                        || mangling[i + 1] == 'Q' || mangling[i + 1] == 'S'
+                        || mangling[i + 1] == 'U' || mangling[i + 1] == 'W')
                 {
                     // basic types
                     i += 2;
@@ -337,7 +339,7 @@ version (Windows)
                 continue;
             }
             else if (mangling.length >= i + 3 && mangling[i .. i + 2] == "$$"
-                    && mangling[i + 2].among('Q', 'R', 'C'))
+                    && mangling[i + 2].among('Q', 'R', 'C', 'A'))
             {
                 // modifiers
                 i += 3;
@@ -1058,6 +1060,16 @@ package string changeCppMangling(bool debugHere = false)(string changeFuncs,
         else
             break;
         parts = parts[1 .. $];
+
+        if (part.among("package", "extern") && parts.length)
+        {
+            part = declaration[parts[0].start .. parts[0].end];
+            if (part.length && part[0] == '(')
+            {
+                assert(part[$ - 1] == ')');
+                parts = parts[1 .. $];
+            }
+        }
     }
     string attributes = declaration[0 .. attributesEnd];
     assert(parts.length >= 3, text(parts.length));
