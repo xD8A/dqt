@@ -141,6 +141,16 @@
 			"lflags-osx": ["-framework", "QtPdfWidgets"],
 			"dependencies": {"dqt:widgets":"*", "dqt:pdf":"*"}
 		},
+		{
+			"name": "printsupport",
+			"targetType": "library",
+			"sourcePaths": ["printsupport"],
+			"importPaths": ["printsupport"],
+			"libs-linux": ["Qt6PrintSupport"],
+			"libs-windows": ["Qt6PrintSupport"],
+			"lflags-osx": ["-framework", "QtPrintSupport"],
+			"dependencies": {"dqt:widgets":"*", "dqt:gui":"*"}
+		},
 
 		{
 			"name": "helloworld",
