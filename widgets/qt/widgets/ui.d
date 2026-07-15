@@ -192,6 +192,8 @@ private struct UICodeWriter()
             methodName = "setGroupSeparatorShown";
         if (name == "isWrapping")
             methodName = "setWrapping";
+        if (name == "margin")
+            methodName = "setContentsMargins";
         if (property.children[0].name == "rect")
         {
             if (isTopLevel)
@@ -603,6 +605,20 @@ private struct UICodeWriter()
         else
             enforce(false, "Unsupported property type " ~ property.children[0].name);
 
+        if (name == "margin")
+        {
+            // setContentsMargins takes 4 arguments (left, top, right, bottom)
+            auto val = codeValue.data;
+            codeValue = Appender!string();
+            codeValue.put(val);
+            codeValue.put(", ");
+            codeValue.put(val);
+            codeValue.put(", ");
+            codeValue.put(val);
+            codeValue.put(", ");
+            codeValue.put(val);
+        }
+
         code.put("        ");
         string tmpVar;
         if (needTmp)
@@ -814,22 +830,34 @@ private struct UICodeWriter()
 
             codeSetup.put("        ");
             codeSetup.put(info.name);
-            codeSetup.put(" = cpp_new!(");
-            if (info.className == "Line")
+            if (info.className == "Line" || info.className.length == 0 || info.className[0] == 'Q')
             {
-                codeSetup.put("dqtimported!q{qt.widgets.frame}.QFrame");
+                codeSetup.put(" = cpp_new!(");
+                if (info.className == "Line")
+                    codeSetup.put("dqtimported!q{qt.widgets.frame}.QFrame");
+                else
+                {
+                    codeSetup.put("dqtimported!q{");
+                    codeSetup.put(getWidgetModule(info.className));
+                    codeSetup.put("}.");
+                    codeSetup.put(info.className);
+                }
+                codeSetup.put(")(");
+                if (!(parentInfo.xmlName == "layout" && widget.name == "layout"))
+                    codeSetup.put(parentName);
+                codeSetup.put(");\n");
             }
             else
             {
-                codeSetup.put("dqtimported!q{");
+                codeSetup.put(" = new dqtimported!q{");
                 codeSetup.put(getWidgetModule(info.className));
                 codeSetup.put("}.");
                 codeSetup.put(info.className);
+                codeSetup.put("(");
+                if (!(parentInfo.xmlName == "layout" && widget.name == "layout"))
+                    codeSetup.put(parentName);
+                codeSetup.put(");\n");
             }
-            codeSetup.put(")(");
-            if (!(parentInfo.xmlName == "layout" && widget.name == "layout"))
-                codeSetup.put(parentName);
-            codeSetup.put(");\n");
         }
         string sortingEnabledVar;
         if (info.className == "QTreeWidget")

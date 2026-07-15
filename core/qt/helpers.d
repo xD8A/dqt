@@ -1502,6 +1502,8 @@ package template packageName(alias T)
         enum packageName = (parent.length ? parent ~ '.' : "") ~ T.stringof[8 .. $];
     else static if (parent)
         enum packageName = parent;
+    else static if (__traits(isModule, T))
+        enum packageName = T.stringof;
     else
         enum packageName = "";
 }

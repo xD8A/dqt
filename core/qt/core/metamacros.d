@@ -790,16 +790,16 @@ enum Q_OBJECT_D = q{
                             string methodCallCases;
                             static foreach (i; 0 .. allMethods.length)
                             {{
-                                string call = text("_t.", __traits(identifier, allMethods[i]), "(");
+                                string call = std.conv.text("_t.", __traits(identifier, allMethods[i]), "(");
                                 static foreach (j, P; Parameters!(allMethods[i]))
                                 {
-                                    call ~= text("*cast(Parameters!(allMethods[", i, "])[", j, "]*)(_a[", j + 1, "]), ");
+                                    call ~= std.conv.text("*cast(Parameters!(allMethods[", i, "])[", j, "]*)(_a[", j + 1, "]), ");
                                 }
                                 call ~= ")";
                                 static if (is(ReturnType!(allMethods[i]) == void))
-                                    methodCallCases ~= text("\n                    case ", i, ": ", call, "; break;");
+                                    methodCallCases ~= std.conv.text("\n                    case ", i, ": ", call, "; break;");
                                 else
-                                    methodCallCases ~= text("\n                    case ", i, ": {if (_a[0]) *cast(ReturnType!(allMethods[", i, "])*)(_a[0]) = ", call, "; else ", call, ";} break;");
+                                    methodCallCases ~= std.conv.text("\n                    case ", i, ": {if (_a[0]) *cast(ReturnType!(allMethods[", i, "])*)(_a[0]) = ", call, "; else ", call, ";} break;");
                             }}
                             return methodCallCases;
                         }());
