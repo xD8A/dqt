@@ -190,13 +190,15 @@ int main(string[] args)
     moduleDependencies["multimediawidgets"] = ["multimedia", "widgets"];
     moduleDependencies["pdf"] = ["gui"];
     moduleDependencies["pdfwidgets"] = ["pdf", "widgets"];
+    moduleDependencies["printsupport"] = ["widgets", "gui"];
 
     immutable allQtModules = [
         "Core", "Gui", "Widgets", "Network",
         "Qml", "Quick", "QuickControls2",
         "WebEngineCore", "WebEngineWidgets",
         "Multimedia", "MultimediaWidgets",
-        "Pdf", "PdfWidgets"
+        "Pdf", "PdfWidgets",
+        "PrintSupport"
     ];
     string getCapitalizedModuleName(string m)
     {
