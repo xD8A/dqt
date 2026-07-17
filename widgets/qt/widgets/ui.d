@@ -906,12 +906,30 @@ private struct UICodeWriter()
             if (property.name == "property")
             {
                 string name;
+                bool stdset = true;
                 foreach (attr; property.attributes)
                 {
                     if (attr.name == "name")
                         name = attr.value;
+                    else if (attr.name == "stdset")
+                        stdset = attr.value != "0";
                 }
-                if (name.among("leftMargin", "topMargin", "rightMargin", "bottomMargin"))
+                if (!stdset && name == "margin")
+                {
+                    enforce(property.children[0].name == "number");
+                    enforce(property.children[0].children.length == 1);
+                    enforce(property.children[0].children[0].type == EntityType.text);
+                    string marginValue = property.children[0].children[0].text;
+                    if ("leftMargin" !in margins)
+                        margins["leftMargin"] = marginValue;
+                    if ("topMargin" !in margins)
+                        margins["topMargin"] = marginValue;
+                    if ("rightMargin" !in margins)
+                        margins["rightMargin"] = marginValue;
+                    if ("bottomMargin" !in margins)
+                        margins["bottomMargin"] = marginValue;
+                }
+                else if (name.among("leftMargin", "topMargin", "rightMargin", "bottomMargin"))
                 {
                     enforce(property.children[0].name == "number");
                     enforce(property.children[0].children.length == 1);
