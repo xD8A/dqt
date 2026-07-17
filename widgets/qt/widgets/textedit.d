@@ -246,7 +246,7 @@ public /+ Q_SLOTS +/:
     version (QT_NO_CLIPBOARD) {} else
     {
         @QSlot final void cut();
-        /+ void copy(); +/
+        @QSlot final void copy();
         @QSlot final void paste();
     }
 

@@ -179,7 +179,7 @@ public /+ Q_SLOTS +/:
     version (QT_NO_CLIPBOARD) {} else
     {
         @QSlot final void cut();
-        /+ void copy() const; +/
+        @QSlot final void copy() const;
         @QSlot final void paste();
     }
 
