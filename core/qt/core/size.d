@@ -180,7 +180,6 @@ Q_CORE_EXPORT QDebug operator<<(QDebug, const QSize &);
 @Q_RELOCATABLE_TYPE extern(C++, class) struct /+ Q_CORE_EXPORT +/ QSizeF
 {
 public:
-    @disable this();
     /+pragma(inline, true) this() nothrow
     {
         this.wd = -1.;
