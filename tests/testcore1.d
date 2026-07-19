@@ -1429,7 +1429,7 @@ unittest
         seen |= 4;
     });
     eventLoop.exec();
-    assert(seen == 7);
+    assert(seen == 7, text("seen=", seen));
     assert(test.lastStr == "void");
 
     cpp_delete(eventLoop);
