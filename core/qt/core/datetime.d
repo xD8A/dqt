@@ -381,7 +381,7 @@ public:
     this(QDate date, QTime time, ref const(QTimeZone) timeZone);
 /+ #endif +/ // timezone
     //@disable this(this);
-    //this(ref const(QDateTime) other) nothrow;
+    this(ref const(QDateTime) other) nothrow;
     /+ QDateTime(QDateTime &&other) noexcept; +/
     ~this();
 
