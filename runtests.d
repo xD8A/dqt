@@ -103,6 +103,7 @@ int main(string[] args)
         static assert(false, "Unknown size of size_t");
 
     string compiler = "dmd";
+    string[] extraCompilerArgs;
     string qtPath;
     string dxmlPath;
     string archSuffix;
@@ -148,6 +149,10 @@ int main(string[] args)
         else if (args[i] == "--skip-pdf")
         {
             skipPdf = true;
+        }
+        else if (args[i] == "-fsanitize=address")
+        {
+            extraCompilerArgs ~= args[i];
         }
         else
         {
@@ -325,7 +330,7 @@ int main(string[] args)
     {
         auto sw = StopWatch(AutoStart.yes);
 
-        string[] dmdArgs = [compiler, "-lib", "-g", "-w", "-m" ~ model];
+        string[] dmdArgs = [compiler, "-lib", "-g", "-w", "-m" ~ model] ~ extraCompilerArgs;
         string path;
         if (m.startsWith("WebEngine"))
             path = buildPath(toLower(m), "qt", "webengine");
@@ -354,6 +359,7 @@ int main(string[] args)
         }
         dmdArgs ~= translateCompileArg(compiler, "-version=DQT_NO_CONVENIENCE_WRAPPERS");
         dmdArgs ~= "-od" ~ resultsDir;
+        dmdArgs ~= extraCompilerArgs;
         if (compiler.endsWith("ldc2") || compiler.endsWith("ldc2.exe"))
             dmdArgs ~= "-of" ~ buildPath(resultsDir, "libdqt" ~ toLower(m) ~ libExt);
         else
@@ -434,6 +440,7 @@ int main(string[] args)
         dmdArgs ~= "-g";
         dmdArgs ~= "-w";
         dmdArgs ~= "-m" ~ model;
+        dmdArgs ~= extraCompilerArgs;
         dmdArgs ~= test.name;
         version (Windows) {}
         else version (OSX)

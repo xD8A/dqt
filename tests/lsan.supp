@@ -1,0 +1,4 @@
+leak:FcFontSetList
+leak:FcValueSave
+leak:FcFontRenderPrepare
+leak:QGtk3Theme::QGtk3Theme
