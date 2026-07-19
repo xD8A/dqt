@@ -115,6 +115,8 @@ void dumpObject(ref Appender!string appender, QObject obj, string indent)
 unittest
 {
     import core.runtime;
+    import core.stdcpp.new_;
+
     QString styleName = QString("Fusion");
     QApplication.setStyle(styleName);
     int argc = Runtime.cArgs.argc; // Reference needs to be valid for lifetime of application object.
@@ -135,7 +137,7 @@ unittest
         {{
             UIStruct!("ui/" ~ filename) ui;
             alias Root = Parameters!(ui.setupUi)[0];
-            Root widget = new Root;
+            Root widget = cpp_new!Root;
             ui.setupUi(widget);
             Appender!string appender;
             dumpObject(appender, widget, "");
@@ -150,6 +152,7 @@ unittest
                 anyFailure = true;
             }
             countFiles++;
+            cpp_delete(widget);
         }}
     }
     assert(!anyFailure);

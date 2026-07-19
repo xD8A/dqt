@@ -46,6 +46,9 @@ public:
     }
     ~this()
     {
+        import core.stdcpp.new_;
+
+        cpp_delete(backingStore);
     }
 
 protected:
@@ -109,6 +112,7 @@ private:
 
 unittest
 {
+    import core.stdcpp.new_;
     import qt.core.metatype;
     import qt.core.namespace;
     import qt.core.string;
@@ -117,7 +121,7 @@ unittest
     import qt.gui.color;
     import qt.gui.standarditemmodel;
 
-    QStandardItem item = new QStandardItem;
+    QStandardItem item = cpp_new!QStandardItem;
     QString tmp = QString("test");
     item.setText(tmp);
     QString text = item.text();
@@ -144,6 +148,8 @@ unittest
     item.setBackground(brush2);
     brush2 = item.background();
     assert(brush2.color() == color2);
+
+    cpp_delete(item);
 }
 
 unittest
@@ -165,6 +171,12 @@ unittest
     }
     assert(data.ref_.loadRelaxed() == 1); // Only our extra reference remains.
     {
+        QBrush b = QBrush.create;
+        *cast(QBrushData**)&b = data;
+        data = null;
+    }
+
+    {
         QBrush b = QBrush(QColor(1, 2, 3));
         data = *cast(QBrushData**)&b;
         assert(data.ref_.loadRelaxed() == 1);
@@ -177,6 +189,12 @@ unittest
     }
     assert(data.ref_.loadRelaxed() == 1); // Only our extra reference remains.
     {
+        QBrush b = QBrush.create;
+        *cast(QBrushData**)&b = data;
+        data = null;
+    }
+
+    {
         QBrush b = QBrush(QColor(1, 2, 3));
         data = *cast(QBrushData**)&b;
         assert(data.ref_.loadRelaxed() == 1);
@@ -187,6 +205,11 @@ unittest
         assert(data.ref_.loadRelaxed() == 3);
     }
     assert(data.ref_.loadRelaxed() == 1); // Only our extra reference remains.
+    {
+        QBrush b = QBrush.create;
+        *cast(QBrushData**)&b = data;
+        data = null;
+    }
 }
 
 unittest
@@ -201,6 +224,8 @@ unittest
     assert(url.toString().toConstWString == "https://dlang.org/"w);
     document.setBaseUrl(url);
     assert(document.baseUrl().toString().toConstWString == "https://dlang.org/"w);
+
+    cpp_delete(document);
 }
 
 unittest
