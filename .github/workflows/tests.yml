@@ -177,14 +177,14 @@ jobs:
 
       - name: Cache Qt
         id: cache-qt
-        if: ${{ matrix.platform != 'debian32' }}
+        if: ${{ matrix.platform != 'debian32' && matrix.platform != 'win64' && matrix.platform != 'win32' }}
         uses: actions/cache@v5
         with:
           path: qt-lib
           key: ${{ runner.os }}-qt-${{ matrix.qt_version }}-${{ matrix.qt_arch }}-${{ matrix.qt_arch_url }}-${{ matrix.qt_platform }}-${{ hashFiles('ci/downloadqt.d') }}
 
       - name: Install Qt
-        if: ${{ steps.cache-qt.outputs.cache-hit != 'true' && matrix.platform != 'debian32' }}
+        if: ${{ (matrix.platform == 'win64' || matrix.platform == 'win32' || steps.cache-qt.outputs.cache-hit != 'true') && matrix.platform != 'debian32' }}
         run: |
           ${{ env.DC }} -Idxml/source -i -run ci/downloadqt.d -v"${{ matrix.qt_version }}" -a${{ matrix.qt_arch }} -u${{ matrix.qt_arch_url }} -p${{ matrix.qt_platform }}
 

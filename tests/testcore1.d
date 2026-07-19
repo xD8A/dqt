@@ -1461,3 +1461,20 @@ unittest
     QObject.connect(test, mixin(SIGNAL(q{missingSignal(int)})), test, mixin(SLOT(q{onSignalInt(int)})));
     assert(lastMsg == wtext("QObject::connect: No such signal TestObject::missingSignal(int) in ", __FILE__, ":", __LINE__ - 1));
 }
+
+unittest
+{
+    import qt.core.datetime;
+
+    auto d = QDateTime(QDate(2026, 7, 15), QTime(10, 30, 0));
+    assert(d.date.year == 2026);
+    {
+        auto d2 = d;
+        assert(d2.date.year == 2026);
+    }
+    {
+        auto d3 = QDateTime(QDate(2020, 1, 2), QTime(10, 30, 0));
+        assert(d3.date.year == 2020);
+    }
+    assert(d.date.year == 2026);
+}
