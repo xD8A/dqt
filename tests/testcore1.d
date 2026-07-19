@@ -751,6 +751,8 @@ unittest
     assert(prop.hasNotifySignal());
     assert(prop.notifySignalIndex() == mo.methodOffset() + numSignalSlotTests + 3);
     assert(mo.method(prop.notifySignalIndex()).name().toConstCharArray() == "customStruct1Changed");
+
+    cpp_delete(a);
 }
 
 void connectByString(TestObject a, TestObject b)
@@ -956,6 +958,8 @@ unittest
 
     cpp_delete(a);
     cpp_delete(b);
+    cpp_delete(dummy);
+    cpp_delete(dummy2);
 }
 
 unittest
@@ -1022,6 +1026,9 @@ unittest
 
     cpp_delete(a);
     cpp_delete(b);
+    cpp_delete(dummy);
+    cpp_delete(dummy2);
+    cpp_delete(thread);
 
     GC.enable();
 }
@@ -1162,6 +1169,10 @@ unittest
     assert(qobject_cast!(QObject)(timer) is timer);
     assert(qobject_cast!(TestObject)(timer) is null);
     assert(qobject_cast!(QTimer)(timer) is timer);
+
+    cpp_delete(timer);
+    cpp_delete(testObject);
+    cpp_delete(obj);
 }
 
 unittest
