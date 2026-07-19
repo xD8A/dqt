@@ -65,6 +65,16 @@ jobs:
             container: debian:12
             model: 32
 
+          - platform: linux64_asan
+            os: ubuntu-24.04
+            model: 64
+            qt_version: 5.15.2
+            qt_arch: gcc_64
+            qt_platform: linux_x64/desktop
+            dc: ldc-latest
+            runtest_args: -fsanitize=address
+            experimental: true
+
           - platform: android_armv7
             os: ubuntu-24.04
             model: triple=armv7a--linux-android30
@@ -97,6 +107,7 @@ jobs:
             runtest_args: --skip-webengine
 
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental == true }}
     container: ${{ matrix.container }}
 
     steps:
@@ -124,6 +135,15 @@ jobs:
           echo "DC=$(echo "$DC" | sed "s|dmd2/linux/bin64|dmd2/linux/bin32|g")" >> "$GITHUB_ENV"
           echo "DMD=$(echo "$DMD" | sed "s|dmd2/linux/bin64|dmd2/linux/bin32|g")" >> "$GITHUB_ENV"
           echo "$(echo "$PATH" | grep -o "[^:]*dmd2/linux/bin[^:]*" | sed "s|dmd2/linux/bin64|dmd2/linux/bin32|g")" >> "$GITHUB_PATH"
+
+      - name: Prepare for ASan
+        if: ${{ matrix.platform == 'linux64_asan' }}
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install -y llvm
+          sudo ln -sf "$(ls /usr/bin/llvm-symbolizer-* | sort -V | tail -1)" /usr/local/bin/llvm-symbolizer
+          echo "ASAN_OPTIONS=symbolize=1:external_symbolizer_path=/usr/local/bin/llvm-symbolizer" >> "$GITHUB_ENV"
+          echo "LSAN_OPTIONS=suppressions=${GITHUB_WORKSPACE}/tests/lsan.supp" >> "$GITHUB_ENV"
 
       - name: Install Android LDC libraries
         if: ${{ matrix.ldc_android_arch != '' }}
