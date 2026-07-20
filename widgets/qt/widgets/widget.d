@@ -64,7 +64,6 @@ alias QWidgetList = QList!(QWidget);
 
 
 extern(C++, class) struct QGraphicsProxyWidget;
-extern(C++, class) struct QGraphicsEffect;
 extern(C++, class) struct QRasterWindowSurface;
 extern(C++, class) struct QUnifiedToolbarSurface;
 /+ #ifndef QT_NO_DEBUG_STREAM
