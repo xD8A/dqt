@@ -45,6 +45,7 @@ import qt.gui.screen;
 import qt.gui.window;
 import qt.gui.windowdefs;
 import qt.helpers;
+import qt.widgets.graphicseffect;
 import qt.widgets.layout;
 import qt.widgets.sizepolicy;
 import qt.widgets.style;
@@ -492,8 +493,8 @@ public:
     @QInvokable final QPixmap grab(ref const(QRect) rectangle /+ = QRect(QPoint(0, 0), QSize(-1, -1)) +/);
 
 /+ #if QT_CONFIG(graphicseffect) +/
-    final QGraphicsEffect* graphicsEffect() const;
-    final void setGraphicsEffect(QGraphicsEffect* effect);
+    final QGraphicsEffect graphicsEffect() const;
+    final void setGraphicsEffect(QGraphicsEffect effect);
 /+ #endif // QT_CONFIG(graphicseffect)
 
 #ifndef QT_NO_GESTURES +/

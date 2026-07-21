@@ -159,6 +159,13 @@
 			"dependencies": {"dqt:widgets":"*"}
 		},
 		{
+			"name": "text",
+			"targetType": "executable",
+			"sourcePaths": ["examples/graphicsview/text"],
+			"importPaths": ["examples/graphicsview/text"],
+			"dependencies": {"dqt:widgets":"*"}
+		},
+		{
 			"name": "exampleguiwindow",
 			"targetType": "executable",
 			"sourcePaths": ["examples/exampleguiwindow"],

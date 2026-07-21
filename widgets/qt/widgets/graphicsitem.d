@@ -10,6 +10,9 @@
  * will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
  */
 module qt.widgets.graphicsitem;
+
+import std.traits : Unqual;
+
 extern(C++):
 
 import qt.config;
@@ -57,6 +60,57 @@ extern(C++, class) struct tst_QGraphicsItem;
 
 
 extern(C++, class) struct QGraphicsItemPrivate;
+
+interface QGraphicsItemInterface
+{
+    // /+ virtual +/~this();
+    /+ virtual +/ void advance(int phase);
+    /+ virtual +/ QRectF boundingRect() const;
+    /+ virtual +/ QPainterPath shape() const;
+    /+ virtual +/ bool contains(ref const(QPointF) point) const;
+    // mixin(changeWindowsMangling(q{mangleClassesTailConst}, q{
+    /+ virtual +/ bool collidesWithItem(const(QGraphicsItem) other, /+ Qt:: +/qt.core.namespace.ItemSelectionMode mode = /+ Qt:: +/qt.core.namespace.ItemSelectionMode.IntersectsItemShape) const;
+    // }));
+    /+ virtual +/ bool collidesWithPath(ref const(QPainterPath) path, /+ Qt:: +/qt.core.namespace.ItemSelectionMode mode = /+ Qt:: +/qt.core.namespace.ItemSelectionMode.IntersectsItemShape) const;
+    // mixin(changeWindowsMangling(q{mangleClassesTailConst}, q{
+    /+ virtual +/ bool isObscuredBy(const(QGraphicsItem) item) const;
+    // }));
+    /+ virtual +/ QPainterPath opaqueArea() const;
+    /+ virtual +/ void paint(QPainter* painter, const(QStyleOptionGraphicsItem)* option, QWidget widget = null);
+    /+ virtual +/ int type() const;
+
+//protected:
+    /+ virtual +/ bool sceneEventFilter(QGraphicsItem watched, QEvent event);
+    /+ virtual +/ bool sceneEvent(QEvent event);
+    /+ virtual +/ void contextMenuEvent(QGraphicsSceneContextMenuEvent event);
+    /+ virtual +/ void dragEnterEvent(QGraphicsSceneDragDropEvent event);
+    /+ virtual +/ void dragLeaveEvent(QGraphicsSceneDragDropEvent event);
+    /+ virtual +/ void dragMoveEvent(QGraphicsSceneDragDropEvent event);
+    /+ virtual +/ void dropEvent(QGraphicsSceneDragDropEvent event);
+    /+ virtual +/ void focusInEvent(QFocusEvent event);
+    /+ virtual +/ void focusOutEvent(QFocusEvent event);
+    /+ virtual +/ void hoverEnterEvent(QGraphicsSceneHoverEvent event);
+    /+ virtual +/ void hoverMoveEvent(QGraphicsSceneHoverEvent event);
+    /+ virtual +/ void hoverLeaveEvent(QGraphicsSceneHoverEvent event);
+    /+ virtual +/ void keyPressEvent(QKeyEvent event);
+    /+ virtual +/ void keyReleaseEvent(QKeyEvent event);
+    /+ virtual +/ void mousePressEvent(QGraphicsSceneMouseEvent event);
+    /+ virtual +/ void mouseMoveEvent(QGraphicsSceneMouseEvent event);
+    /+ virtual +/ void mouseReleaseEvent(QGraphicsSceneMouseEvent event);
+    /+ virtual +/ void mouseDoubleClickEvent(QGraphicsSceneMouseEvent event);
+    /+ virtual +/ void wheelEvent(QGraphicsSceneWheelEvent event);
+    /+ virtual +/ void inputMethodEvent(QInputMethodEvent event);
+    /+ virtual +/ QVariant inputMethodQuery(/+ Qt:: +/qt.core.namespace.InputMethodQuery query) const;
+
+    alias GraphicsItemChange = QGraphicsItem.GraphicsItemChange;
+    /+ virtual +/ QVariant itemChange(GraphicsItemChange change, ref const(QVariant) value);
+
+    alias Extension = QGraphicsItem.Extension;
+    /+ virtual +/ bool supportsExtension(Extension extension) const;
+    /+ virtual +/ void setExtension(Extension extension, ref const(QVariant) variant);
+    /+ virtual +/ QVariant extension(ref const(QVariant) variant) const;
+}
+
 /// Binding for C++ class [QGraphicsItem](https://doc.qt.io/qt-6/qgraphicsitem.html).
 abstract class /+ Q_WIDGETS_EXPORT +/ QGraphicsItem
 {
@@ -542,10 +596,19 @@ static if (!defined!"QT_TYPESAFE_FLAGS")
 Q_DECLARE_INTERFACE(QGraphicsItem, "org.qt-project.Qt.QGraphicsItem")
 #endif +/
 
+static assert(__traits(classInstanceSize, QGraphicsItem) == (void*).sizeof * 2);
+struct QGraphicsItemFakeInheritance
+{
+    static assert(__traits(classInstanceSize, QGraphicsItem) % (void*).sizeof == 0);
+    void*[__traits(classInstanceSize, QGraphicsItem) / (void*).sizeof - 1] data;
+}
+
 
 /// Binding for C++ class [QGraphicsObject](https://doc.qt.io/qt-6/qgraphicsobject.html).
-class /+ Q_WIDGETS_EXPORT +/ QGraphicsObject : QObject, QGraphicsItem
+class /+ Q_WIDGETS_EXPORT +/ QGraphicsObject : QObject, QGraphicsItemInterface
 {
+    QGraphicsItemFakeInheritance baseQGraphicsItemInterface;
+
     mixin(Q_OBJECT);
     /+ Q_PROPERTY(QGraphicsObject* parent READ parentObject WRITE setParentItem NOTIFY parentChanged
                DESIGNABLE false)
@@ -576,6 +639,69 @@ public:
 
     alias children = QObject.children;
 
+    pragma(inline, true) final QGraphicsItem asGraphicsItem() 
+    {
+        return cast(QGraphicsItem)(cast(void*)(cast(byte*)&baseQGraphicsItemInterface - (void*).sizeof));
+    }
+
+    pragma(inline, true) final const(QGraphicsItem) asConstGraphicsItem() const
+    {
+        return cast(const(QGraphicsItem))(cast(void*)(cast(byte*)&baseQGraphicsItemInterface - (void*).sizeof));
+    }
+
+    override void advance(int phase)
+    {
+        // The default implementation does nothing.
+        // https://github.com/qt/qtbase/blob/e3e40c44d3f998a433a6a1080297c5f28e9a768f/src/widgets/graphicsview/qgraphicsitem.cpp#L4537
+    }
+    override QRectF boundingRect() const
+    {
+        assert(0);
+    }
+    override QPainterPath shape() const
+    {
+        assert(0);
+    }
+    override bool contains(ref const(QPointF) point) const
+    {
+        assert(0);
+    }
+    override bool collidesWithItem(const(QGraphicsItem) other, qt.core.namespace.ItemSelectionMode mode = /+ Qt:: +/qt.core.namespace.ItemSelectionMode.IntersectsItemShape) const
+    {
+        assert(0);
+    }
+    override bool collidesWithPath(ref const(QPainterPath) path, /+ Qt:: +/qt.core.namespace.ItemSelectionMode mode = /+ Qt:: +/qt.core.namespace.ItemSelectionMode.IntersectsItemShape) const
+    {
+        assert(0);
+    }
+    override bool isObscuredBy(const(QGraphicsItem) item) const
+    {
+        assert(0);
+    }
+    override QPainterPath opaqueArea() const
+    {
+        assert(0);
+    }
+    override void paint(QPainter* painter, const(QStyleOptionGraphicsItem)* option, QWidget widget = null)
+    {
+        assert(0);
+    }
+    override int type() const
+    {
+        assert(0);
+    }
+
+    final void setPos(ref const(QPointF) pos)
+    {
+        asGraphicsItem().setPos(pos);
+    }
+
+    alias GraphicsItemFlags = QGraphicsItem.GraphicsItemFlags;
+    final void setFlags(GraphicsItemFlags flags)
+    {
+        asGraphicsItem().setFlags(flags);
+    }
+
     version (QT_NO_GESTURES) {} else
     {
         final void grabGesture(/+ Qt:: +/qt.core.namespace.GestureType type, /+ Qt:: +/qt.core.namespace.GestureFlags flags = /+ Qt:: +/qt.core.namespace.GestureFlags());
@@ -603,6 +729,115 @@ protected:
     this(ref QGraphicsItemPrivate dd, QGraphicsItem parent);
 
     override bool event(QEvent ev);
+
+    override bool sceneEventFilter(QGraphicsItem watched, QEvent event)
+    {
+        // https://github.com/qt/qtbase/blob/e3e40c44d3f998a433a6a1080297c5f28e9a768f/src/widgets/graphicsview/qgraphicsitem.cpp#L6607
+        return false;
+    }
+    override bool sceneEvent(QEvent event)
+    {
+        assert(0);
+    }
+    override void contextMenuEvent(QGraphicsSceneContextMenuEvent event)
+    {
+        assert(0);
+    }
+    override void dragEnterEvent(QGraphicsSceneDragDropEvent event)
+    {
+        assert(0);
+    }
+    override void dragLeaveEvent(QGraphicsSceneDragDropEvent event)
+    {
+        assert(0);
+    }
+    override void dragMoveEvent(QGraphicsSceneDragDropEvent event)
+    {
+        assert(0);
+    }
+    override void dropEvent(QGraphicsSceneDragDropEvent event)
+    {
+        assert(0);
+    }
+    override void focusInEvent(QFocusEvent event)
+    {
+        assert(0);
+    }
+    override void focusOutEvent(QFocusEvent event)
+    {
+        assert(0);
+    }
+    override void hoverEnterEvent(QGraphicsSceneHoverEvent event)
+    {
+        assert(0);
+    }
+    override void hoverMoveEvent(QGraphicsSceneHoverEvent event)
+    {
+        assert(0);
+    }
+    override void hoverLeaveEvent(QGraphicsSceneHoverEvent event)
+    {
+        assert(0);
+    }
+    override void keyPressEvent(QKeyEvent event)
+    {
+        assert(0);
+    }
+    override void keyReleaseEvent(QKeyEvent event)
+    {
+        assert(0);
+    }
+    override void mousePressEvent(QGraphicsSceneMouseEvent event)
+    {
+        assert(0);
+    }
+    override void mouseMoveEvent(QGraphicsSceneMouseEvent event)
+    {
+        assert(0);
+    }
+    override void mouseReleaseEvent(QGraphicsSceneMouseEvent event)
+    {
+        assert(0);
+    }
+    override void mouseDoubleClickEvent(QGraphicsSceneMouseEvent event)
+    {
+        assert(0);
+    }
+    override void wheelEvent(QGraphicsSceneWheelEvent event)
+    {
+        assert(0);
+    }
+    override void inputMethodEvent(QInputMethodEvent event)
+    {
+        assert(0);
+    }
+    override QVariant inputMethodQuery(/+ Qt:: +/qt.core.namespace.InputMethodQuery query) const
+    {
+        assert(0);
+    }
+
+    // alias GraphicsItemChange = QGraphicsItem.GraphicsItemChange;
+    override QVariant itemChange(GraphicsItemChange change, ref const(QVariant) value)
+    {
+        // https://github.com/qt/qtbase/blob/e3e40c44d3f998a433a6a1080297c5f28e9a768f/src/widgets/graphicsview/qgraphicsitem.cpp#L7367
+        return value;
+    }
+
+    // alias Extension = QGraphicsItem.Extension;
+    override bool supportsExtension(Extension extension) const
+    {
+        // https://github.com/qt/qtbase/blob/e3e40c44d3f998a433a6a1080297c5f28e9a768f/src/widgets/graphicsview/qgraphicsitem.cpp#L7379
+        return false;
+    }
+    override void setExtension(Extension extension, ref const(QVariant) variant)
+    {
+        // https://github.com/qt/qtbase/blob/e3e40c44d3f998a433a6a1080297c5f28e9a768f/src/widgets/graphicsview/qgraphicsitem.cpp#L7390
+    }
+    override QVariant extension(ref const(QVariant) variant) const
+    {
+        // https://github.com/qt/qtbase/blob/e3e40c44d3f998a433a6a1080297c5f28e9a768f/src/widgets/graphicsview/qgraphicsitem.cpp#L7403
+        return QVariant();
+    }
 
 private:
     /+ friend class QGraphicsItem; +/
@@ -1067,14 +1302,14 @@ private:
 
 pragma(inline, true) T qgraphicsitem_cast(T)(QGraphicsItem item)
 {
-    alias Item = /+ std:: +/remove_cv!(/+ std:: +/remove_pointer!(T).__remove_pointer_helper.type).type;
+    alias Item = Unqual!T;
     return int(Item.Type) == int(QGraphicsItem.Type)
         || (item && int(Item.Type) == item.type()) ? static_cast!(T)(item) : null;
 }
 
 pragma(inline, true) T qgraphicsitem_cast(T)(const(QGraphicsItem) item)
 {
-    alias Item = /+ std:: +/remove_cv!(/+ std:: +/remove_pointer!(T).__remove_pointer_helper.type).type;
+    alias Item = Unqual!T;
     return int(Item.Type) == int(QGraphicsItem.Type)
         || (item && int(Item.Type) == item.type()) ? static_cast!(T)(item) : null;
 }

@@ -46,9 +46,9 @@ static if (!defined!"QT_NO_MATRIX4X4")
 public:
     @disable this();
     /+pragma(inline, true) this() { setToIdentity(); }+/
-    /+ explicit +/this(/+ Qt:: +/qt.core.namespace.Initialization)
+    /+ explicit +/this(/+ Qt:: +/qt.core.namespace.Initialization) nothrow
     {
-        this.flagBits = Flag.General;
+        this.flagBits = Flags(Flag.General);
     }
     /+ explicit +/this(const(float)* values);
     pragma(inline, true) this(float m11, float m12, float m13, float m14,
@@ -60,7 +60,7 @@ public:
         m[1][0] = m12; m[1][1] = m22; m[1][2] = m32; m[1][3] = m42;
         m[2][0] = m13; m[2][1] = m23; m[2][2] = m33; m[2][3] = m43;
         m[3][0] = m14; m[3][1] = m24; m[3][2] = m34; m[3][3] = m44;
-        flagBits = Flag.General;
+        flagBits = Flags(Flag.General);
     }
 
     /+ template <int N, int M> +/
@@ -77,7 +77,7 @@ public:
                     m[matrixCol][matrixRow] = 0.0f;
             }
         }
-        flagBits = Flag.General;
+        flagBits = Flags(Flag.General);
     }
 
     this(const(float)* values, int cols, int rows);
@@ -117,7 +117,7 @@ public:
             m[index][1] = value.y();
             m[index][2] = value.z();
             m[index][3] = value.w();
-            flagBits = Flag.General;
+            flagBits = Flags(Flag.General);
         }
 
         pragma(inline, true) QVector4D row(int index) const
@@ -136,7 +136,7 @@ public:
             m[1][index] = value.y();
             m[2][index] = value.z();
             m[3][index] = value.w();
-            flagBits = Flag.General;
+            flagBits = Flags(Flag.General);
         }
     }
 
@@ -179,7 +179,7 @@ public:
         m[3][1] = 0.0f;
         m[3][2] = 0.0f;
         m[3][3] = 1.0f;
-        flagBits = Flag.Identity;
+        flagBits = Flags(Flag.Identity);
     }
 
     pragma(inline, true) void fill(float value)
@@ -200,7 +200,7 @@ public:
         m[3][1] = value;
         m[3][2] = value;
         m[3][3] = value;
-        flagBits = Flag.General;
+        flagBits = Flags(Flag.General);
     }
 
     double determinant() const;
@@ -226,7 +226,7 @@ public:
         m[3][1] += other.m[3][1];
         m[3][2] += other.m[3][2];
         m[3][3] += other.m[3][3];
-        flagBits = Flag.General;
+        flagBits = Flags(Flag.General);
         return this;
     }
     pragma(inline, true) ref QMatrix4x4 opOpAssign(string op)(ref const(QMatrix4x4) other) if (op == "-")
@@ -247,7 +247,7 @@ public:
         m[3][1] -= other.m[3][1];
         m[3][2] -= other.m[3][2];
         m[3][3] -= other.m[3][3];
-        flagBits = Flag.General;
+        flagBits = Flags(Flag.General);
         return this;
     }
     pragma(inline, true) ref QMatrix4x4 opOpAssign(string op)(ref const(QMatrix4x4) o) if (op == "*")
@@ -366,7 +366,7 @@ public:
         m[3][1] *= factor;
         m[3][2] *= factor;
         m[3][3] *= factor;
-        flagBits = Flag.General;
+        flagBits = Flags(Flag.General);
         return this;
     }
     ref QMatrix4x4 opOpAssign(string op)(float divisor) if (op == "/");
@@ -410,8 +410,314 @@ public:
     }+/
 
     /+ friend QMatrix4x4 operator+(const QMatrix4x4& m1, const QMatrix4x4& m2); +/
+    pragma(inline, true) QMatrix4x4 opBinary(string op)(ref const(QMatrix4x4) m2) const nothrow if (op == "+")
+    {
+        const auto ref m1 = this;
+        auto m = QMatrix4x4(/+ Qt:: +/qt.core.namespace.Uninitialized);
+        
+        m.m[0][0] = m1.m[0][0] + m2.m[0][0];
+        m.m[0][1] = m1.m[0][1] + m2.m[0][1];
+        m.m[0][2] = m1.m[0][2] + m2.m[0][2];
+        m.m[0][3] = m1.m[0][3] + m2.m[0][3];
+        m.m[1][0] = m1.m[1][0] + m2.m[1][0];
+        m.m[1][1] = m1.m[1][1] + m2.m[1][1];
+        m.m[1][2] = m1.m[1][2] + m2.m[1][2];
+        m.m[1][3] = m1.m[1][3] + m2.m[1][3];
+        m.m[2][0] = m1.m[2][0] + m2.m[2][0];
+        m.m[2][1] = m1.m[2][1] + m2.m[2][1];
+        m.m[2][2] = m1.m[2][2] + m2.m[2][2];
+        m.m[2][3] = m1.m[2][3] + m2.m[2][3];
+        m.m[3][0] = m1.m[3][0] + m2.m[3][0];
+        m.m[3][1] = m1.m[3][1] + m2.m[3][1];
+        m.m[3][2] = m1.m[3][2] + m2.m[3][2];
+        m.m[3][3] = m1.m[3][3] + m2.m[3][3];
+        return m;
+    }
     /+ friend QMatrix4x4 operator-(const QMatrix4x4& m1, const QMatrix4x4& m2); +/
+    pragma(inline, true) QMatrix4x4 opBinary(string op)(ref const(QMatrix4x4) m2) const nothrow if (op == "-")
+    {
+        const auto ref m1 = this;
+        auto m = QMatrix4x4(/+ Qt:: +/qt.core.namespace.Uninitialized);
+
+        m.m[0][0] = m1.m[0][0] - m2.m[0][0];
+        m.m[0][1] = m1.m[0][1] - m2.m[0][1];
+        m.m[0][2] = m1.m[0][2] - m2.m[0][2];
+        m.m[0][3] = m1.m[0][3] - m2.m[0][3];
+        m.m[1][0] = m1.m[1][0] - m2.m[1][0];
+        m.m[1][1] = m1.m[1][1] - m2.m[1][1];
+        m.m[1][2] = m1.m[1][2] - m2.m[1][2];
+        m.m[1][3] = m1.m[1][3] - m2.m[1][3];
+        m.m[2][0] = m1.m[2][0] - m2.m[2][0];
+        m.m[2][1] = m1.m[2][1] - m2.m[2][1];
+        m.m[2][2] = m1.m[2][2] - m2.m[2][2];
+        m.m[2][3] = m1.m[2][3] - m2.m[2][3];
+        m.m[3][0] = m1.m[3][0] - m2.m[3][0];
+        m.m[3][1] = m1.m[3][1] - m2.m[3][1];
+        m.m[3][2] = m1.m[3][2] - m2.m[3][2];
+        m.m[3][3] = m1.m[3][3] - m2.m[3][3];
+        return m;
+    }
     /+ friend QMatrix4x4 operator*(const QMatrix4x4& m1, const QMatrix4x4& m2); +/
+    pragma(inline, true) QMatrix4x4 opBinary(string op)(ref const(QMatrix4x4) m2) const nothrow if (op == "*")
+    {
+        auto flagBits = this.flagBits | m2.flagBits;
+        if (flagBits.toInt() < QMatrix4x4.Flag.Rotation2D) {
+            QMatrix4x4 m = this;
+            m.m[3][0] += m.m[0][0] * m2.m[3][0];
+            m.m[3][1] += m.m[1][1] * m2.m[3][1];
+            m.m[3][2] += m.m[2][2] * m2.m[3][2];
+
+            m.m[0][0] *= m2.m[0][0];
+            m.m[1][1] *= m2.m[1][1];
+            m.m[2][2] *= m2.m[2][2];
+            m.flagBits = flagBits;
+            return m;
+        }
+
+        const auto ref m1 = this;
+        auto m = QMatrix4x4(/+ Qt:: +/qt.core.namespace.Uninitialized);
+        
+        m.m[0][0] = m1.m[0][0] * m2.m[0][0]
+                + m1.m[1][0] * m2.m[0][1]
+                + m1.m[2][0] * m2.m[0][2]
+                + m1.m[3][0] * m2.m[0][3];
+        m.m[0][1] = m1.m[0][1] * m2.m[0][0]
+                + m1.m[1][1] * m2.m[0][1]
+                + m1.m[2][1] * m2.m[0][2]
+                + m1.m[3][1] * m2.m[0][3];
+        m.m[0][2] = m1.m[0][2] * m2.m[0][0]
+                + m1.m[1][2] * m2.m[0][1]
+                + m1.m[2][2] * m2.m[0][2]
+                + m1.m[3][2] * m2.m[0][3];
+        m.m[0][3] = m1.m[0][3] * m2.m[0][0]
+                + m1.m[1][3] * m2.m[0][1]
+                + m1.m[2][3] * m2.m[0][2]
+                + m1.m[3][3] * m2.m[0][3];
+
+        m.m[1][0] = m1.m[0][0] * m2.m[1][0]
+                + m1.m[1][0] * m2.m[1][1]
+                + m1.m[2][0] * m2.m[1][2]
+                + m1.m[3][0] * m2.m[1][3];
+        m.m[1][1] = m1.m[0][1] * m2.m[1][0]
+                + m1.m[1][1] * m2.m[1][1]
+                + m1.m[2][1] * m2.m[1][2]
+                + m1.m[3][1] * m2.m[1][3];
+        m.m[1][2] = m1.m[0][2] * m2.m[1][0]
+                + m1.m[1][2] * m2.m[1][1]
+                + m1.m[2][2] * m2.m[1][2]
+                + m1.m[3][2] * m2.m[1][3];
+        m.m[1][3] = m1.m[0][3] * m2.m[1][0]
+                + m1.m[1][3] * m2.m[1][1]
+                + m1.m[2][3] * m2.m[1][2]
+                + m1.m[3][3] * m2.m[1][3];
+
+        m.m[2][0] = m1.m[0][0] * m2.m[2][0]
+                + m1.m[1][0] * m2.m[2][1]
+                + m1.m[2][0] * m2.m[2][2]
+                + m1.m[3][0] * m2.m[2][3];
+        m.m[2][1] = m1.m[0][1] * m2.m[2][0]
+                + m1.m[1][1] * m2.m[2][1]
+                + m1.m[2][1] * m2.m[2][2]
+                + m1.m[3][1] * m2.m[2][3];
+        m.m[2][2] = m1.m[0][2] * m2.m[2][0]
+                + m1.m[1][2] * m2.m[2][1]
+                + m1.m[2][2] * m2.m[2][2]
+                + m1.m[3][2] * m2.m[2][3];
+        m.m[2][3] = m1.m[0][3] * m2.m[2][0]
+                + m1.m[1][3] * m2.m[2][1]
+                + m1.m[2][3] * m2.m[2][2]
+                + m1.m[3][3] * m2.m[2][3];
+
+        m.m[3][0] = m1.m[0][0] * m2.m[3][0]
+                + m1.m[1][0] * m2.m[3][1]
+                + m1.m[2][0] * m2.m[3][2]
+                + m1.m[3][0] * m2.m[3][3];
+        m.m[3][1] = m1.m[0][1] * m2.m[3][0]
+                + m1.m[1][1] * m2.m[3][1]
+                + m1.m[2][1] * m2.m[3][2]
+                + m1.m[3][1] * m2.m[3][3];
+        m.m[3][2] = m1.m[0][2] * m2.m[3][0]
+                + m1.m[1][2] * m2.m[3][1]
+                + m1.m[2][2] * m2.m[3][2]
+                + m1.m[3][2] * m2.m[3][3];
+        m.m[3][3] = m1.m[0][3] * m2.m[3][0]
+                + m1.m[1][3] * m2.m[3][1]
+                + m1.m[2][3] * m2.m[3][2]
+                + m1.m[3][3] * m2.m[3][3];
+        m.flagBits = flagBits;
+        return m;
+    }
+
+    version (QT_NO_VECTOR4D) {} else
+    {
+        pragma(inline, true) QVector4D opBinaryRight(string op)(ref const(QVector4D) vector) const nothrow if (op == "*")
+        {
+            const auto ref matrix = this;
+            float x; float y; float z; float w;
+            x = vector.x() * matrix.m[0][0] +
+                vector.y() * matrix.m[0][1] +
+                vector.z() * matrix.m[0][2] +
+                vector.w() * matrix.m[0][3];
+            y = vector.x() * matrix.m[1][0] +
+                vector.y() * matrix.m[1][1] +
+                vector.z() * matrix.m[1][2] +
+                vector.w() * matrix.m[1][3];
+            z = vector.x() * matrix.m[2][0] +
+                vector.y() * matrix.m[2][1] +
+                vector.z() * matrix.m[2][2] +
+                vector.w() * matrix.m[2][3];
+            w = vector.x() * matrix.m[3][0] +
+                vector.y() * matrix.m[3][1] +
+                vector.z() * matrix.m[3][2] +
+                vector.w() * matrix.m[3][3];
+            return QVector4D(x, y, z, w);
+        }
+
+        pragma(inline, true) QVector4D opBinary(string op)(ref const(QVector4D) vector) const nothrow if (op == "*")
+        {
+            const auto ref matrix = this;
+            float x; float y; float z; float w;
+            x = vector.x() * matrix.m[0][0] +
+                vector.y() * matrix.m[1][0] +
+                vector.z() * matrix.m[2][0] +
+                vector.w() * matrix.m[3][0];
+            y = vector.x() * matrix.m[0][1] +
+                vector.y() * matrix.m[1][1] +
+                vector.z() * matrix.m[2][1] +
+                vector.w() * matrix.m[3][1];
+            z = vector.x() * matrix.m[0][2] +
+                vector.y() * matrix.m[1][2] +
+                vector.z() * matrix.m[2][2] +
+                vector.w() * matrix.m[3][2];
+            w = vector.x() * matrix.m[0][3] +
+                vector.y() * matrix.m[1][3] +
+                vector.z() * matrix.m[2][3] +
+                vector.w() * matrix.m[3][3];
+            return QVector4D(x, y, z, w);
+        }
+    }
+
+    pragma(inline, true) QPoint opBinaryRight(string op)(ref const(QPoint) point) const nothrow if (op == "*")
+    {
+        import qt.core.global;
+
+        const auto ref matrix = this;
+        float xin; float yin;
+        float x; float y; float w;
+        xin = point.x();
+        yin = point.y();
+        x = xin * matrix.m[0][0] +
+            yin * matrix.m[0][1] +
+            matrix.m[0][3];
+        y = xin * matrix.m[1][0] +
+            yin * matrix.m[1][1] +
+            matrix.m[1][3];
+        w = xin * matrix.m[3][0] +
+            yin * matrix.m[3][1] +
+            matrix.m[3][3];
+        if (w == 1.0f)
+            return QPoint(qRound(x), qRound(y));
+        else
+            return QPoint(qRound(x / w), qRound(y / w));
+    }
+    
+    pragma(inline, true) QPointF opBinaryRight(string op)(ref const(QPointF) point) const nothrow if (op == "*")
+    {
+        import qt.core.global;
+
+        const auto ref matrix = this;
+        float xin; float yin;
+        float x; float y; float w;
+        xin = float(point.x());
+        yin = float(point.y());
+        x = xin * matrix.m[0][0] +
+            yin * matrix.m[0][1] +
+            matrix.m[0][3];
+        y = xin * matrix.m[1][0] +
+            yin * matrix.m[1][1] +
+            matrix.m[1][3];
+        w = xin * matrix.m[3][0] +
+            yin * matrix.m[3][1] +
+            matrix.m[3][3];
+        if (w == 1.0f) {
+            return QPointF(qreal(x), qreal(y));
+        } else {
+            return QPointF(qreal(x / w), qreal(y / w));
+        }
+    }   
+
+    pragma(inline, true) QMatrix4x4 opUnary(string op)() const nothrow if (op == "-")
+    {
+        const auto ref matrix = this;
+        auto m = QMatrix4x4(/+ Qt:: +/qt.core.namespace.Uninitialized);    
+
+        m.m[0][0] = -matrix.m[0][0];
+        m.m[0][1] = -matrix.m[0][1];
+        m.m[0][2] = -matrix.m[0][2];
+        m.m[0][3] = -matrix.m[0][3];
+        m.m[1][0] = -matrix.m[1][0];
+        m.m[1][1] = -matrix.m[1][1];
+        m.m[1][2] = -matrix.m[1][2];
+        m.m[1][3] = -matrix.m[1][3];
+        m.m[2][0] = -matrix.m[2][0];
+        m.m[2][1] = -matrix.m[2][1];
+        m.m[2][2] = -matrix.m[2][2];
+        m.m[2][3] = -matrix.m[2][3];
+        m.m[3][0] = -matrix.m[3][0];
+        m.m[3][1] = -matrix.m[3][1];
+        m.m[3][2] = -matrix.m[3][2];
+        m.m[3][3] = -matrix.m[3][3];
+        return m;
+    }
+
+    pragma(inline, true) QPointF opBinaryRight(string op)(float factor) const nothrow if (op == "*")
+    {
+        const auto ref matrix = this;
+        auto m = QMatrix4x4(/+ Qt:: +/qt.core.namespace.Uninitialized);
+
+        m.m[0][0] = matrix.m[0][0] * factor;
+        m.m[0][1] = matrix.m[0][1] * factor;
+        m.m[0][2] = matrix.m[0][2] * factor;
+        m.m[0][3] = matrix.m[0][3] * factor;
+        m.m[1][0] = matrix.m[1][0] * factor;
+        m.m[1][1] = matrix.m[1][1] * factor;
+        m.m[1][2] = matrix.m[1][2] * factor;
+        m.m[1][3] = matrix.m[1][3] * factor;
+        m.m[2][0] = matrix.m[2][0] * factor;
+        m.m[2][1] = matrix.m[2][1] * factor;
+        m.m[2][2] = matrix.m[2][2] * factor;
+        m.m[2][3] = matrix.m[2][3] * factor;
+        m.m[3][0] = matrix.m[3][0] * factor;
+        m.m[3][1] = matrix.m[3][1] * factor;
+        m.m[3][2] = matrix.m[3][2] * factor;
+        m.m[3][3] = matrix.m[3][3] * factor;
+        return m;
+    }
+
+    pragma(inline, true) QPointF opBinary(string op)(float factor) const nothrow if (op == "*")
+    {
+        const auto ref matrix = this;
+        auto m = QMatrix4x4(/+ Qt:: +/qt.core.namespace.Uninitialized);
+
+        m.m[0][0] = matrix.m[0][0] * factor;
+        m.m[0][1] = matrix.m[0][1] * factor;
+        m.m[0][2] = matrix.m[0][2] * factor;
+        m.m[0][3] = matrix.m[0][3] * factor;
+        m.m[1][0] = matrix.m[1][0] * factor;
+        m.m[1][1] = matrix.m[1][1] * factor;
+        m.m[1][2] = matrix.m[1][2] * factor;
+        m.m[1][3] = matrix.m[1][3] * factor;
+        m.m[2][0] = matrix.m[2][0] * factor;
+        m.m[2][1] = matrix.m[2][1] * factor;
+        m.m[2][2] = matrix.m[2][2] * factor;
+        m.m[2][3] = matrix.m[2][3] * factor;
+        m.m[3][0] = matrix.m[3][0] * factor;
+        m.m[3][1] = matrix.m[3][1] * factor;
+        m.m[3][2] = matrix.m[3][2] * factor;
+        m.m[3][3] = matrix.m[3][3] * factor;
+        return m;
+    }
+
 /+ #ifndef QT_NO_VECTOR3D
 #if QT_DEPRECATED_SINCE(6, 1) +/
     version (QT_NO_VECTOR3D) {} else
@@ -647,11 +953,11 @@ public:
     {
         // We have to assume that the caller will modify the matrix elements,
         // so we flip it over to "General" mode.
-        flagBits = Flag.General;
-        return *m.ptr.ptr;
+        flagBits = Flags(Flag.General);
+        return m.ptr.ptr;
     }
-    pragma(inline, true) const(float)* data() const { return *m.ptr.ptr; }
-    pragma(inline, true) const(float)* constData() const { return *m.ptr.ptr; }
+    pragma(inline, true) const(float)* data() const { return m.ptr.ptr; }
+    pragma(inline, true) const(float)* constData() const { return m.ptr.ptr; }
 
     void optimize();
 

@@ -84,18 +84,12 @@ public:
 
     /+ [[nodiscard]] +/ QGenericMatrix!(M, N, T) transposed() const
     {
-        static if (#configValue!"merged")
-        {
         auto result = QGenericMatrix!(M, N, T)(/+ Qt:: +/qt.core.namespace.Uninitialized);
-        }
-    static if (#configValue!"merged")
-    {
-    QGenericMatrix!(M,N,T) result__1(qt.core.namespace.Initialization);
-    }
+
         for (int row = 0; row < M; ++row)
             for (int col = 0; col < N; ++col)
-                result__1.m[row][col] = m[col][row];
-        return cast(QGenericMatrix!(int, int, T)) (result__1);
+                result.m[row][col] = m[col][row];
+        return result;
     }
 
     ref QGenericMatrix!(N, M, T) opOpAssign(string op)(ref const(QGenericMatrix!(N, M, T)) other) if (op == "+")
@@ -147,9 +141,9 @@ public:
                 values[row * N + col] = T(m[col][row]);
     }
 
-    T* data() { return *m.ptr.ptr; }
-    const(T)* data() const { return *m.ptr.ptr; }
-    const(T)* constData() const { return *m.ptr.ptr; }
+    T* data() { return m.ptr.ptr; }
+    const(T)* data() const { return m.ptr.ptr; }
+    const(T)* constData() const { return m.ptr.ptr; }
 
     /+ template<int NN, int MM, typename TT> +/
     /+ friend QGenericMatrix<NN, MM, TT> operator+(const QGenericMatrix<NN, MM, TT>& m1, const QGenericMatrix<NN, MM, TT>& m2); +/

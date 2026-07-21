@@ -128,20 +128,25 @@ alias SceneLayers = QFlags!(SceneLayer);
     final void destroyItemGroup(QGraphicsItemGroup group);
 
     final void addItem(QGraphicsItem item);
-    final QGraphicsEllipseItem addEllipse(ref const(QRectF) rect, ref const(QPen) pen = globalInitVar!QPen, ref const(QBrush) brush = globalInitVar!QBrush);
-    final QGraphicsLineItem addLine(ref const(QLineF) line, ref const(QPen) pen = globalInitVar!QPen);
-    final QGraphicsPathItem addPath(ref const(QPainterPath) path, ref const(QPen) pen = globalInitVar!QPen, ref const(QBrush) brush = globalInitVar!QBrush);
+    pragma(inline, true) final void addItem(QGraphicsObject obj)
+    {
+        auto itm = obj.asGraphicsItem();
+        this.addItem(itm);
+    }
+    final QGraphicsEllipseItem addEllipse(ref const(QRectF) rect, ref const(QPen) pen/* = globalInitVar!QPen */, ref const(QBrush) brush/* = globalInitVar!QBrush */);
+    final QGraphicsLineItem addLine(ref const(QLineF) line, ref const(QPen) pen/* = globalInitVar!QPen */);
+    final QGraphicsPathItem addPath(ref const(QPainterPath) path, ref const(QPen) pen/* = globalInitVar!QPen */, ref const(QBrush) brush/* = globalInitVar!QBrush */);
     final QGraphicsPixmapItem addPixmap(ref const(QPixmap) pixmap);
-    final QGraphicsPolygonItem addPolygon(ref const(QPolygonF) polygon, ref const(QPen) pen = globalInitVar!QPen, ref const(QBrush) brush = globalInitVar!QBrush);
-    final QGraphicsRectItem addRect(ref const(QRectF) rect, ref const(QPen) pen = globalInitVar!QPen, ref const(QBrush) brush = globalInitVar!QBrush);
-    final QGraphicsTextItem addText(ref const(QString) text, ref const(QFont) font = globalInitVar!QFont);
-    final QGraphicsSimpleTextItem addSimpleText(ref const(QString) text, ref const(QFont) font = globalInitVar!QFont);
+    final QGraphicsPolygonItem addPolygon(ref const(QPolygonF) polygon, ref const(QPen) pen/* = globalInitVar!QPen */, ref const(QBrush) brush/* = globalInitVar!QBrush */);
+    final QGraphicsRectItem addRect(ref const(QRectF) rect, ref const(QPen) pen/* = globalInitVar!QPen */, ref const(QBrush) brush/* = globalInitVar!QBrush */);
+    final QGraphicsTextItem addText(ref const(QString) text, ref const(QFont) font/* = globalInitVar!QFont */);
+    final QGraphicsSimpleTextItem addSimpleText(ref const(QString) text, ref const(QFont) font/* = globalInitVar!QFont */);
     final QGraphicsProxyWidget* addWidget(QWidget widget, /+ Qt:: +/qt.core.namespace.WindowFlags wFlags = /+ Qt:: +/qt.core.namespace.WindowFlags());
-    pragma(inline, true) final QGraphicsEllipseItem addEllipse(qreal x, qreal y, qreal w, qreal h, ref const(QPen) pen = globalInitVar!QPen, ref const(QBrush) brush = globalInitVar!QBrush)
+    pragma(inline, true) final QGraphicsEllipseItem addEllipse(qreal x, qreal y, qreal w, qreal h, ref const(QPen) pen/* = globalInitVar!QPen */, ref const(QBrush) brush/* = globalInitVar!QBrush */)
     { auto tmp = QRectF(x, y, w, h); return addEllipse(tmp, pen, brush); }
-    pragma(inline, true) final QGraphicsLineItem addLine(qreal x1, qreal y1, qreal x2, qreal y2, ref const(QPen) pen = globalInitVar!QPen)
+    pragma(inline, true) final QGraphicsLineItem addLine(qreal x1, qreal y1, qreal x2, qreal y2, ref const(QPen) pen/* = globalInitVar!QPen */)
     { auto tmp = QLineF(x1, y1, x2, y2); return addLine(tmp, pen); }
-    pragma(inline, true) final QGraphicsRectItem addRect(qreal x, qreal y, qreal w, qreal h, ref const(QPen) pen = globalInitVar!QPen, ref const(QBrush) brush = globalInitVar!QBrush)
+    pragma(inline, true) final QGraphicsRectItem addRect(qreal x, qreal y, qreal w, qreal h, ref const(QPen) pen/* = globalInitVar!QPen */, ref const(QBrush) brush/* = globalInitVar!QBrush */)
     { auto tmp = QRectF(x, y, w, h); return addRect(tmp, pen, brush); }
     final void removeItem(QGraphicsItem item);
 
