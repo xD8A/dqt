@@ -61,9 +61,11 @@ import std.conv : to;
  * BINDING GAP: tests that construct `QTimeZone` from an id
  * (`setMSecsSinceEpoch`, `fromSecsSinceEpoch`, `toString_isoDate_extra`,
  * `toString_textDate_extra`, `addDays`, `offsetFromUtc`, `zoneAtTime`,
- * `timeZoneAbbreviation`, `timeZones`, `systemTimeZoneChange`) are compiled out
- * on Android with `version (Android) {} else`: Qt's Android build resolves the
- * id through JNI (`QJniObject::fromString` -> `QJniEnvironment`), which needs a
+ * `timeZoneAbbreviation`, `timeZones`, `systemTimeZoneChange`, `operator_eqeq`,
+ * `fromStringDateFormat`, `fromStringStringFormat`,
+ * `fromStringStringFormat_localTimeZone`, `invalid`) are compiled out on
+ * Android with `version (Android) {} else`: Qt's Android build resolves the id
+ * through JNI (`QJniObject::fromString` -> `QJniEnvironment`), which needs a
  * `JavaVM`, and the qemu chroot has no ART/JVM, so it aborts with SIGSEGV.
  *
  * BINDING GAP: the following tests cannot be ported with the current D bindings
@@ -2413,6 +2415,7 @@ private TestRows!EqDtRow operator_eqeq_data()
 }
 
 // operator_eqeq
+version (Android) {} else
 unittest
 {
     foreach (i, ref r; operator_eqeq_data())
@@ -2886,6 +2889,7 @@ private FdRow[] fromStringDateFormat_data()
 }
 
 // fromStringDateFormat
+version (Android) {} else
 unittest
 {
     foreach (i, ref r; fromStringDateFormat_data())
@@ -3030,6 +3034,7 @@ private void runFromStringStringFormat()
 }
 
 // fromStringStringFormat
+version (Android) {} else
 unittest
 {
     runFromStringStringFormat();
@@ -3100,6 +3105,7 @@ private TestRows!FssLocalRow fromStringStringFormat_localTimeZone_data()
 }
 
 // fromStringStringFormat_localTimeZone
+version (Android) {} else
 unittest
 {
     auto rows = fromStringStringFormat_localTimeZone_data();
@@ -4314,6 +4320,7 @@ private TestRows!InvalidRow invalid_data()
 }
 
 // invalid
+version (Android) {} else
 unittest
 {
     foreach (i, ref r; invalid_data())
