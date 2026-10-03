@@ -6,6 +6,7 @@ import qt.core.datetime;
 import qt.core.locale;
 import qt.core.metaobject : QMetaEnum;
 import qt.core.string;
+import qt.core.bytearray;
 import qt.core.stringlist;
 import qt.core.anystringview;
 import std.stdio : writeln;
@@ -76,6 +77,13 @@ private QCalendar calFromName(ref const(QString) name)
 private QCalendar calFromLiteral(string s)
 {
     return QCalendar(QAnyStringView(s));
+}
+
+// QString -> D string, for diagnostics (cf. baStr() in tst_timezone.d).
+private string qsStr(ref const(QString) s)
+{
+    QByteArray ba = s.toUtf8();
+    return cast(string) ba.constData()[0 .. ba.size()].idup;
 }
 
 // checkYear() from the source, used by basic().
@@ -189,7 +197,23 @@ unittest
             for (int k = 10; k > 0 && cal.isLeapYear(year); --k)
                 year--;
             if (!cal.isLeapYear(year))
-                assert(cal.daysInYear(year) < cal.daysInYear(leap), ctx);
+            {
+                // Diagnostic for the "basic system N" invariant below. Dump the
+                // calendar and the computed years so a failure is self-describing.
+                const int daysYear = cal.daysInYear(year);
+                const int daysLeap = cal.daysInYear(leap);
+                const QString calName = cal.name();
+                const string diag = "calendar " ~ qsStr(calName)
+                    ~ " (system " ~ i.to!string ~ ", enum " ~ (cast(int) system).to!string ~ ")"
+                    ~ ", year=" ~ year.to!string
+                    ~ " leap=" ~ leap.to!string
+                    ~ ", daysInYear(year)=" ~ daysYear.to!string
+                    ~ " daysInYear(leap)=" ~ daysLeap.to!string
+                    ~ ", isLeapYear(year)=" ~ cal.isLeapYear(year).to!string
+                    ~ ", isLeapYear(leap)=" ~ cal.isLeapYear(leap).to!string;
+                writeln("DIAG basic ", diag);
+                assert(daysYear < daysLeap, ctx ~ " [" ~ diag ~ "]");
+            }
             checkYear(cal, leap, false, ctx);
         }
         checkYear(cal, year, true, ctx);
