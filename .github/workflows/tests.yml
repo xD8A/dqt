@@ -15,21 +15,17 @@ jobs:
       fail-fast: false
 
       matrix:
-        platform: [ linux64, win64, osx64, debian32 ]
-        dc: [ dmd-latest, dmd-2.103.1, ldc-latest, dmd-master ]
-
-        exclude:
-          - { platform: osx64, dc: dmd-2.103.1 }
-          - { platform: osx64, dc: dmd-latest }
+        # Only main (win64, dmd-2.103.1) is enabled. The other platforms and
+        # compilers are kept commented out below for reference.
+        #
+        # platform: [ linux64, win64, osx64, debian32 ]
+        # dc: [ dmd-latest, dmd-2.103.1, ldc-latest, dmd-master ]
+        #
+        # exclude:
+        #   - { platform: osx64, dc: dmd-2.103.1 }
+        #   - { platform: osx64, dc: dmd-latest }
 
         include:
-          - platform: linux64
-            os: ubuntu-24.04
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: gcc_64
-            qt_platform: linux_x64/desktop
-
           - platform: win64
             os: windows-2022
             model: 64
@@ -37,70 +33,78 @@ jobs:
             qt_arch: msvc2019_64
             qt_arch_url: win64_msvc2019_64
             qt_platform: windows_x86/desktop
+            dc: dmd-2.103.1
 
-          - platform: osx64
-            os: macos-15-intel
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: macos
-            qt_arch_url: clang_64
-            qt_platform: mac_x64/desktop
+          # - platform: linux64
+          #   os: ubuntu-24.04
+          #   model: 64
+          #   qt_version: 6.4.2
+          #   qt_arch: gcc_64
+          #   qt_platform: linux_x64/desktop
 
-          - platform: debian32
-            os: ubuntu-24.04
-            container: debian:12
-            model: 32
+          # - platform: osx64
+          #   os: macos-15-intel
+          #   model: 64
+          #   qt_version: 6.4.2
+          #   qt_arch: macos
+          #   qt_arch_url: clang_64
+          #   qt_platform: mac_x64/desktop
 
-          - platform: linux64_asan
-            os: ubuntu-24.04
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: gcc_64
-            qt_platform: linux_x64/desktop
-            dc: ldc-latest
-            runtest_args: -fsanitize=address
-            experimental: true
+          # - platform: debian32
+          #   os: ubuntu-24.04
+          #   container: debian:12
+          #   model: 32
 
-          - platform: linuxarm64
-            os: ubuntu-24.04-arm
-            model: 64
-            qt_version: 6.7.3
-            qt_arch: gcc_arm64
-            qt_arch_url: linux_gcc_arm64
-            qt_platform: linux_arm64/desktop
-            dc: ldc-1.38.0
-            runtest_args: --skip-webengine --skip-pdf
+          # - platform: linux64_asan
+          #   os: ubuntu-24.04
+          #   model: 64
+          #   qt_version: 6.4.2
+          #   qt_arch: gcc_64
+          #   qt_platform: linux_x64/desktop
+          #   dc: ldc-latest
+          #   runtest_args: -fsanitize=address
+          #   experimental: true
 
-          - platform: android_armv7
-            os: ubuntu-24.04
-            model: triple=armv7a--linux-android30
-            qt_version: 6.4.2
-            qt_arch: android_armv7
-            qt_arch_suffix: _armeabi-v7a
-            qt_platform: linux_x64/android
-            dc: ldc-1.38.0
-            android_arch: armeabi-v7a
-            android_arch2: arm-linux-androideabi
-            android_arch3: arm
-            ldc_android_arch: armv7a
-            ndk_clang: armv7a-linux-androideabi30-clang
-            runtest_args: --skip-webengine --skip-pdf
+          # - platform: linuxarm64
+          #   os: ubuntu-24.04-arm
+          #   model: 64
+          #   qt_version: 6.7.3
+          #   qt_arch: gcc_arm64
+          #   qt_arch_url: linux_gcc_arm64
+          #   qt_platform: linux_arm64/desktop
+          #   dc: ldc-1.38.0
+          #   runtest_args: --skip-webengine --skip-pdf
 
-          - platform: android_arm64
-            os: ubuntu-24.04
-            model: triple=aarch64--linux-android30
-            qt_version: 6.4.2
-            qt_arch: android_arm64_v8a
-            qt_arch_suffix: _arm64-v8a
-            qt_platform: linux_x64/android
-            dc: ldc-1.38.0
-            android_arch: arm64-v8a
-            android_arch2: aarch64-linux-android
-            android_arch3: arm64
-            android_bits_suffix: 64
-            ldc_android_arch: aarch64
-            ndk_clang: aarch64-linux-android30-clang
-            runtest_args: --skip-webengine --skip-pdf
+          # - platform: android_armv7
+          #   os: ubuntu-24.04
+          #   model: triple=armv7a--linux-android30
+          #   qt_version: 6.4.2
+          #   qt_arch: android_armv7
+          #   qt_arch_suffix: _armeabi-v7a
+          #   qt_platform: linux_x64/android
+          #   dc: ldc-1.38.0
+          #   android_arch: armeabi-v7a
+          #   android_arch2: arm-linux-androideabi
+          #   android_arch3: arm
+          #   ldc_android_arch: armv7a
+          #   ndk_clang: armv7a-linux-androideabi30-clang
+          #   runtest_args: --skip-webengine --skip-pdf
+
+          # - platform: android_arm64
+          #   os: ubuntu-24.04
+          #   model: triple=aarch64--linux-android30
+          #   qt_version: 6.4.2
+          #   qt_arch: android_arm64_v8a
+          #   qt_arch_suffix: _arm64-v8a
+          #   qt_platform: linux_x64/android
+          #   dc: ldc-1.38.0
+          #   android_arch: arm64-v8a
+          #   android_arch2: aarch64-linux-android
+          #   android_arch3: arm64
+          #   android_bits_suffix: 64
+          #   ldc_android_arch: aarch64
+          #   ndk_clang: aarch64-linux-android30-clang
+          #   runtest_args: --skip-webengine --skip-pdf
 
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental == true }}
@@ -219,6 +223,28 @@ jobs:
         timeout-minutes: 5
         run: |
           ${{ env.DC }} -run runtests.d --github --compiler=${{ env.DC }} -m${{ matrix.model }} --qt-path=qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }} --arch-suffix=${{ matrix.qt_arch_suffix }} --dxml-path=dxml/source ${{ matrix.runtest_args }}
+
+      # Win64 + dmd-2.103.1 only: tst_time/tst_date/tst_calendar abort with
+      # 0xC0000005 (access violation). Re-run the (already built) exes under cdb
+      # (Windows SDK) and print the faulting stack to get a backtrace.
+      - name: Windows crash backtrace (cdb)
+        if: ${{ always() && matrix.platform == 'win64' && matrix.dc == 'dmd-2.103.1' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        shell: cmd
+        run: |
+          set "CDB=C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe"
+          if not exist "%CDB%" set "CDB=cdb"
+          set "PATH=%CD%\qt-lib\${{ matrix.qt_version }}\${{ matrix.qt_arch }}\bin;%PATH%"
+          set "BINDIR=%CD%\test_results\win64\tests\corelib\time"
+          for %%T in (tst_time tst_date tst_calendar) do (
+            echo =================== %%T ===================
+            if exist "%BINDIR%\%%T.exe" (
+              "%CDB%" -g -G -c ".sympath+ %CD%\qt-lib\${{ matrix.qt_version }}\${{ matrix.qt_arch }}\bin; .symfix; .reload; sxe av; g; .echo ==== EXCEPTION ====; .ecxr; kb 30; r; q" "%BINDIR%\%%T.exe"
+            ) else (
+              echo missing "%BINDIR%\%%T.exe"
+            )
+          )
 
 #      # Re-run the (already built) corelib/time tests under qemu's gdbstub so the
 #      # SIGSEGV on android_arm64 yields a backtrace. Mirrors what runtests.d does:
