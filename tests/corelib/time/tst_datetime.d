@@ -15,6 +15,8 @@ import qt.core.timezone;
 import qt.core.calendar;
 import qt.core.locale;
 import qt.core.datastream;
+import qt.core.libraryinfo : QLibraryInfo;
+import qt.core.versionnumber : QVersionNumber;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -62,6 +64,20 @@ import std.conv : to;
 private void gate(string name, string reason)
 {
     writeln("SKIP ", name, " - ", reason);
+}
+
+// The Qt library actually loaded at runtime, as opposed to DQt's compile-time
+// header version (`QT_VERSION`). Needed because the CI matrix may run 6.4.2
+// headers against a newer runtime (e.g. 6.7.3); a compile-time `QT_VERSION`
+// check would then stay at the header value and not reflect the runtime.
+private bool runtimeVersionAtLeast(int major, int minor, int patch = 0)
+{
+    QVersionNumber v = QLibraryInfo.version_();
+    if (v.majorVersion() != major)
+        return v.majorVersion() > major;
+    if (v.minorVersion() != minor)
+        return v.minorVersion() > minor;
+    return v.microVersion() >= patch;
 }
 
 struct TestRows(T)
@@ -1209,7 +1225,12 @@ unittest
     {
         // TODO QTBUG-95966: find better ways to use repeated 't'
         QString f = QString("yyyy-MM-dd hh:mm:ss tt");
-        assert(testDateTime.toString(f, cal) == "2013-01-01 01:02:03 UTCUTC", ctx);
+        // Qt 6.7 changed how a repeated 't' is formatted, so only check the
+        // historical "UTCUTC" expectation on older runtimes.
+        if (runtimeVersionAtLeast(6, 7))
+            gate("toString_strformat", "repeated 't' formatting differs on Qt >= 6.7");
+        else
+            assert(testDateTime.toString(f, cal) == "2013-01-01 01:02:03 UTCUTC", ctx);
     }
 }
 /+ #endif +/
