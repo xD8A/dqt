@@ -553,9 +553,16 @@ private StartOfDayRow[] startOfDay_endOfDay_data()
         string s = "Europe/Sofia";
         QByteArray b = qba(s);
         QTimeZone z = QTimeZone(b);
-        if (z.isValid())
+        version (Windows)
+        {
+            // MS's TZ APIs lack Europe/Sofia's 1994-03-27 spring-forward, so
+            // this row is only valid on Windows when Qt is built with ICU.
+        }
+        else if (z.isValid())
+        {
             // Sofia
             rows ~= StartOfDayRow(QDate(1994, 3, 27), s, QTime(1, 0), final_);
+        }
     }
 /+ #endif +/
     {
