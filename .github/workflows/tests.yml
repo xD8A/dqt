@@ -7,12 +7,7 @@ on:
       - qt5
       - testqt6
       - testqt5
-  pull_request:
-    branches:
-      - master
-      - qt5
-      - testqt6
-      - testqt5
+  workflow_dispatch:
 
 jobs:
   main:
