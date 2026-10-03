@@ -50,6 +50,15 @@ import std.string : fromStringz;
  * real C++ constructor is therefore bound as `rawConstructor()` and exposed via
  * the static `create()` factory: `QCalendar.create()` runs the actual
  * `QCalendar()` and yields a valid Gregorian calendar.
+ *
+ * BINDING GAP: the C++ `checkYear()` compares `standaloneMonthName()` /
+ * `monthName()` against a default-constructed `QString()`. Materialising that
+ * `QString()` temporary makes some DMD frontends (2.103.x, 2.113.x) reference
+ * `core.internal.destruction.destructRecurse!QString` through
+ * `object.destroy!QString`, which is not instantiated when the test is compiled
+ * with `-i=-qt`, so linking fails with an undefined reference. The equivalent
+ * `.isEmpty()` check is used here instead; a default-constructed `QString` is
+ * empty, so the semantics are identical.
  */
 
 
@@ -77,8 +86,8 @@ private void checkYear(QCalendar cal, int year, bool normal, string ctx)
     assert(!cal.isDateValid(year, 0, 1), c);
     assert(!QDate(year, 0, 1, cal).isValid(), c);
     assert(moons <= cal.maximumMonthsInYear(), c);
-    assert(cal.standaloneMonthName(loc, moons + 1, year) == QString(), c);
-    assert(cal.monthName(loc, 0, year) == QString(), c);
+    assert(cal.standaloneMonthName(loc, moons + 1, year).isEmpty(), c);
+    assert(cal.monthName(loc, 0, year).isEmpty(), c);
 
     const int days = cal.daysInYear(year);
     assert(days > 0, c);

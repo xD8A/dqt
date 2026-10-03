@@ -495,7 +495,7 @@ public:
 
     // Mirrors QDateTime::equals()/precedes(): two invalid values compare equal,
     // an invalid value precedes a valid one, otherwise compare absolute instants.
-    bool opEquals(QDateTime other) const { return equals(other); }
+    bool opEquals(ref const(QDateTime) other) const { return equals(other); }
     int opCmp(ref const(QDateTime) other) const
     {
         if (precedes(other))
