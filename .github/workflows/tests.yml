@@ -220,6 +220,49 @@ jobs:
         run: |
           ${{ env.DC }} -run runtests.d --github --compiler=${{ env.DC }} -m${{ matrix.model }} --qt-path=qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }} --arch-suffix=${{ matrix.qt_arch_suffix }} --dxml-path=dxml/source ${{ matrix.runtest_args }}
 
+#      # Re-run the (already built) corelib/time tests under qemu's gdbstub so the
+#      # SIGSEGV on android_arm64 yields a backtrace. Mirrors what runtests.d does:
+#      # qemu-aarch64-static -L android-chroot-arm64 <exe> with
+#      # LD_LIBRARY_PATH=qt-lib/<ver>/android_arm64_v8a/lib.
+#      - name: Android crash backtrace (qemu + gdb)
+#        if: ${{ always() && matrix.platform == 'android_arm64' }}
+#        continue-on-error: true
+#        run: |
+#          sudo apt-get -qq update
+#          sudo apt-get -qq install -y gdb-multiarch
+#          export LD_LIBRARY_PATH="$PWD/qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }}/lib"
+#          port=1234
+#          for t in tst_timezone tst_datetime tst_date tst_time; do
+#            BIN="$PWD/test_results/linux-aarch64--linux-android30/tests/corelib/time/$t"
+#            [ -x "$BIN" ] || continue
+#            port=$((port + 1))
+#            echo "=================== $t (gdb port $port) ==================="
+#            qemu-aarch64-static -L "$PWD/android-chroot-arm64" -g "$port" "$BIN" >"/tmp/$t.qemu.out" 2>&1 &
+#            QPID=$!
+#            sleep 3
+#            timeout 240 gdb-multiarch -q -batch \
+#              -ex "set pagination off" \
+#              -ex "set confirm off" \
+#              -ex "set backtrace limit 40" \
+#              -ex "set sysroot $PWD/android-chroot-arm64" \
+#              -ex "set solib-search-path $PWD/android-chroot-arm64/system/lib64:$PWD/qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }}/lib" \
+#              -ex "file $BIN" \
+#              -ex "target remote :$port" \
+#              -ex "handle SIGSEGV stop print nopass" \
+#              -ex "continue" \
+#              -ex "echo \n---- backtrace ----\n" \
+#              -ex "bt" \
+#              -ex "info registers pc" \
+#              -ex "info sharedlibrary" \
+#              -ex "kill" \
+#              2>&1 | tee "/tmp/$t.gdb.out" || true
+#            kill "$QPID" 2>/dev/null || true
+#            wait "$QPID" 2>/dev/null || true
+#            echo "---- qemu output tail ----"
+#            tail -n 20 "/tmp/$t.qemu.out" || true
+#            echo
+#          done
+
 #      - name: Upload test results
 #        uses: actions/upload-artifact@v4
 #        if: always()

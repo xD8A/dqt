@@ -50,12 +50,19 @@ import std.conv : to;
  *
  * Environment-dependent cases (locale / timezone data) are runtime-gated and
  * skipped with a reason when the prerequisite is missing.
+ *
+ * BINDING GAP: the `startOfDay`/`endOfDay` timezone tests construct `QTimeZone`
+ * from an id; on Android Qt resolves the id through JNI
+ * (`QJniObject::fromString` -> `QJniEnvironment`), which needs a `JavaVM`. The
+ * qemu Android chroot has no ART/JVM, so those tests are compiled out on
+ * Android with `version (Android) {} else`.
  */
 
 private void gate(string name, string reason)
 {
     writeln("SKIP ", name, " - ", reason);
 }
+
 
 private QByteArray qba(string s)
 {
@@ -585,6 +592,7 @@ private StartOfDayRow[] startOfDay_endOfDay_data()
 }
 
 // startOfDay_endOfDay (timezone-dependent)
+version (Android) {} else
 unittest
 {
     auto rows = startOfDay_endOfDay_data();
@@ -680,6 +688,7 @@ private QDate[] startOfDay_endOfDay_fixed_data()
 }
 
 // startOfDay_endOfDay_fixed
+version (Android) {} else
 unittest
 {
     const string ctx = "startOfDay_endOfDay_fixed";
@@ -723,6 +732,7 @@ unittest
 }
 
 // startOfDay_endOfDay_bounds
+version (Android) {} else
 unittest
 {
     const string ctx = "startOfDay_endOfDay_bounds";
