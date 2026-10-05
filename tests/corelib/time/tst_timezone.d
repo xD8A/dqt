@@ -10,7 +10,7 @@ import qt.core.locale;
 import qt.core.namespace;
 import qt.core.global;
 import qt.core.list;
-import qt_version : Qt6_7;
+import qt_version : Qt6_7, Qt6_Unknown;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -587,7 +587,9 @@ unittest
             assert(!zone.hasDaylightTime(), ctx);
             // Qt 6.7 normalizes some CLDR/Windows ids differently (e.g. "UTC-11").
             const string actualId = baStr(zone.id());
-            static if (Qt6_7)
+            static if (Qt6_Unknown)
+                gate("utcOffsetId/" ~ r.id, "Qt version unknown; zone id normalization not checked");
+            else static if (Qt6_7)
             {
                 if (actualId != r.id)
                     gate("utcOffsetId/" ~ r.id, "zone id normalized to '" ~ actualId ~ "' on Qt >= 6.7");

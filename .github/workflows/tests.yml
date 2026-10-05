@@ -39,13 +39,12 @@ jobs:
       - name: Run corelib/time unittests
         run: |
           set -eux
-          # Temporarily disabled to see which tests depend on a timezone
-          # database: these minimal images ship no tzdata, so QTimeZone cannot
+          # The minimal images have no timezone database, so QTimeZone cannot
           # resolve any zone (systemTimeZone() is invalid, Pacific/Auckland etc.
-          # are unavailable) and zone-dependent tests should fail.
-          # export DEBIAN_FRONTEND=noninteractive
-          # apt-get update -qq
-          # apt-get install -y -qq tzdata
+          # are unavailable). Install tzdata.
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq tzdata
 
           # These images ship Qt under $QTDIR, but that lib directory is not on
           # the linker's default search path, and they lack the libstdc++.so
@@ -105,11 +104,11 @@ jobs:
       - name: Run corelib/time unittests
         run: |
           set -eux
-          # Temporarily disabled to see which tests depend on a timezone
-          # database (the minimal images ship no tzdata).
-          # export DEBIAN_FRONTEND=noninteractive
-          # apt-get update -qq
-          # apt-get install -y -qq tzdata
+          # The minimal images have no timezone database, so QTimeZone cannot
+          # resolve any zone. Install tzdata.
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq tzdata
 
           # These images ship Qt under $QTDIR, but that lib directory is not on
           # the linker's default search path, and they lack the libstdc++.so

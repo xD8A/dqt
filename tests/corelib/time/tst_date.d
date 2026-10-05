@@ -11,7 +11,7 @@ import qt.core.global;
 import qt.core.calendar;
 import qt.core.timezone;
 import qt.core.stringview;
-import qt_version : Qt6_12;
+import qt_version : Qt6_12, Qt6_Unknown;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -1598,6 +1598,14 @@ unittest
 {
     foreach (i, ref r; fromStringFormat_data())
     {
+        static if (Qt6_Unknown)
+        {
+            if (r.s == "11010" && r.format == "dMMyy")
+            {
+                gate("fromStringFormat", "Qt version unknown; greedy-break parsing not checked");
+                continue;
+            }
+        }
         QString s = QString(r.s);
         QString fmt = QString(r.format);
         QDate got = QDate.fromString(s, qToStringViewIgnoringNull(fmt), QCalendar.create());

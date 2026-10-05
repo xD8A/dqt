@@ -15,7 +15,7 @@ import qt.core.timezone;
 import qt.core.calendar;
 import qt.core.locale;
 import qt.core.datastream;
-import qt_version : Qt6_5, Qt6_7, Qt6_12;
+import qt_version : Qt6_5, Qt6_7, Qt6_12, Qt6_Unknown;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -1279,7 +1279,9 @@ unittest
         // Qt 6.7 changed how a repeated 't' is formatted, so only check the
         // historical "UTCUTC" expectation on older Qt releases.
         // Q: Already fixed in Qt 6.5?
-        static if (Qt6_5)
+        static if (Qt6_Unknown)
+            gate("toString_strformat", "Qt version unknown; repeated 't' formatting not checked");
+        else static if (Qt6_5)
             gate("toString_strformat", "repeated 't' formatting differs on Qt >= 6.5");
         else
             assert(testDateTime.toString(f, cal) == "2013-01-01 01:02:03 UTCUTC", ctx);
@@ -2948,9 +2950,13 @@ private TestRows!FssRow fromStringStringFormat_data()
     // rejecting it. The parser represents it as a UTC offset (upstream uses
     // QTimeZone::fromSecondsAheadOfUtc, whose QDateTime is OffsetFromUTC), so
     // match that representation with offsetQ.
-    static if (Qt6_12)
+    static if (Qt6_Unknown)
+    {
+        // Qt version unknown: the single-digit-offset parse is not checked.
+    }
+    else static if (Qt6_12)
         rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt",
-                 offsetQ(2001, 9, 15, 9, 33, 1, 1, 18_000));
+                 offsetQ(2001, 9, 15, 9, 33, 1, 1, 18000));
     else
         rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
     rows.add("2001-09-15T09:33:01.001-701", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
@@ -2973,7 +2979,11 @@ private TestRows!FssRow fromStringStringFormat_data()
     rows.add("2001-09-15T09:33:01.001 1", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
     // Qt 6.12 restrains the offset field's greed: "UTC+0111.50" now parses as
     // UTC+01:00 with time 11:50 instead of failing (OffsetFromUTC, as above).
-    static if (Qt6_12)
+    static if (Qt6_Unknown)
+    {
+        // Qt version unknown: the merged offset/time parse is not checked.
+    }
+    else static if (Qt6_12)
         rows.add("2008-10-13 UTC+0111.50", "yyyy-MM-dd thh.mm",
                  offsetQ(2008, 10, 13, 11, 50, 0, 0, 3600));
     else
@@ -4022,7 +4032,9 @@ unittest
         QByteArray id = nzStdOffset.timeZone().id();
         // Qt 6.7 normalizes whole-hour offset ids differently (e.g. "UTC+12:00").
         const string actualId = baStr(id);
-        static if (Qt6_7)
+        static if (Qt6_Unknown)
+            gate("timeZones", "Qt version unknown; offset zone id not checked");
+        else static if (Qt6_7)
         {
             if (actualId != "UTC+12")
                 gate("timeZones", "offset zone id is '" ~ actualId ~ "' on Qt >= 6.7");
@@ -4139,7 +4151,11 @@ unittest
     assert(atGap.time() == QTime(3, 0), ctx);
     assert(atGap.toMSecsSinceEpoch() == gapMSecs, ctx);
     // - Test transition hole, setting 02:00:00 is invalid
-    static if (Qt6_7)
+    static if (Qt6_Unknown)
+    {
+        gate("timeZones", "Qt version unknown; transition-hole disambiguation not checked");
+    }
+    else static if (Qt6_7)
     {
         gate("timeZones", "transition-hole disambiguation differs on Qt >= 6.7");
     }

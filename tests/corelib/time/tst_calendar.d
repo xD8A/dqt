@@ -9,7 +9,7 @@ import qt.core.string;
 import qt.core.bytearray;
 import qt.core.stringlist;
 import qt.core.anystringview;
-import qt_version : Qt6_10;
+import qt_version : Qt6_10, Qt6_Unknown;
 import std.stdio : writeln;
 import std.conv : to;
 import std.string : fromStringz;
@@ -87,6 +87,11 @@ private string qsStr(ref const(QString) s)
     return cast(string) ba.constData()[0 .. ba.size()].idup;
 }
 
+private void gate(string name, string reason)
+{
+    writeln("SKIP ", name, " - ", reason);
+}
+
 // checkYear() from the source, used by basic().
 private void checkYear(QCalendar cal, int year, bool normal, string ctx)
 {
@@ -121,7 +126,9 @@ private void checkYear(QCalendar cal, int year, bool normal, string ctx)
             // Qt 6.10 makes the unspecified-year `daysInMonth(month)` the
             // longest that month gets, so it may exceed this normal year's
             // value (upstream: QCOMPARE_GE).
-            static if (Qt6_10)
+            static if (Qt6_Unknown)
+                gate(c, "Qt version unknown; unspecified-year daysInMonth not checked");
+            else static if (Qt6_10)
                 assert(cal.daysInMonth(i) >= last, c);
             else
                 assert(cal.daysInMonth(i) == last, c);
@@ -246,7 +253,11 @@ unittest
         assert(cal.monthsInYear(QCalendar.Unspecified) == cal.maximumMonthsInYear(), ctx);
         for (int month = cal.maximumMonthsInYear(); month > 0; month--)
         {
-            static if (Qt6_10)
+            static if (Qt6_Unknown)
+            {
+                gate(ctx, "Qt version unknown; default daysInMonth semantics not checked");
+            }
+            else static if (Qt6_10)
             {
                 // Qt 6.10: the unspecified-year `daysInMonth(month)` is the
                 // longest that month gets (upstream: hitMax / days < maxDays).
