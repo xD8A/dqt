@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.4.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.4.3-minimal
           # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.5.3-minimal
           # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.6.3-minimal
           # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.7.3-minimal
@@ -23,7 +23,7 @@ jobs:
           # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.9.3-minimal
           # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.10.3-minimal
           # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.11.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.12.0-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.12.0-minimal
 
     container:
       image: ${{ matrix.image }}
@@ -39,12 +39,13 @@ jobs:
       - name: Run corelib/time unittests
         run: |
           set -eux
-          # The minimal images have no timezone database, so QTimeZone cannot
+          # Temporarily disabled to see which tests depend on a timezone
+          # database: these minimal images ship no tzdata, so QTimeZone cannot
           # resolve any zone (systemTimeZone() is invalid, Pacific/Auckland etc.
-          # are unavailable). Install tzdata.
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq
-          apt-get install -y -qq tzdata
+          # are unavailable) and zone-dependent tests should fail.
+          # export DEBIAN_FRONTEND=noninteractive
+          # apt-get update -qq
+          # apt-get install -y -qq tzdata
 
           # These images ship Qt under $QTDIR, but that lib directory is not on
           # the linker's default search path, and they lack the libstdc++.so
@@ -65,3 +66,59 @@ jobs:
           export LD_LIBRARY_PATH="${QT_LIBS}:${LD_LIBRARY_PATH:-}"
 
           dub run --build=unittest :unittest
+
+  time-unittests-arm64:
+    name: arm64 ${{ matrix.image }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.4.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.5.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.6.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.7.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.8.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.9.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.10.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.11.3-minimal
+          # - ghcr.io/xd8a/ubuntu-ldc:1.43.0-qt6.12.0-minimal
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Show versions
+        run: |
+          ldc2 --version | head -1
+          dub --version | head -1
+
+      - name: Run corelib/time unittests
+        run: |
+          set -eux
+          # Temporarily disabled to see which tests depend on a timezone
+          # database (the minimal images ship no tzdata).
+          # export DEBIAN_FRONTEND=noninteractive
+          # apt-get update -qq
+          # apt-get install -y -qq tzdata
+
+          # These images ship Qt under $QTDIR, but that lib directory is not on
+          # the linker's default search path, and they lack the libstdc++.so
+          # development symlink (only the runtime libstdc++.so.6 is present).
+          QT_LIBS="$(qtpaths6 --query QT_INSTALL_LIBS 2>/dev/null || echo "${QTDIR:-/opt/Qt/current}/lib")"
+          # Qt version of the image; read at compile time by test_runner.d via
+          # `import(".qt_version.txt")` and used by the Qt6_x gates.
+          QT_VERSION="$(qmake6 -query QT_VERSION 2>/dev/null || qmake -query QT_VERSION 2>/dev/null || echo unknown)"
+          echo "$QT_VERSION" > .qt_version.txt
+
+          STDCPP="$(ls /usr/lib/aarch64-linux-gnu/libstdc++.so.6 /lib/aarch64-linux-gnu/libstdc++.so.6 2>/dev/null | head -1)"
+          mkdir -p "$HOME/lib"
+          ln -sf "$STDCPP" "$HOME/lib/libstdc++.so"
+
+          export DFLAGS="-L-L${QT_LIBS} -L-L${HOME}/lib ${DFLAGS:-}"
+          export LD_LIBRARY_PATH="${QT_LIBS}:${LD_LIBRARY_PATH:-}"
+
+          dub run --build=unittest --compiler=ldc2 :unittest
