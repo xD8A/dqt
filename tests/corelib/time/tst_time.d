@@ -4,6 +4,7 @@ module corelib.time.tst_time;
 import qt.core.datetime;
 import qt.core.string;
 import qt.core.namespace;
+import qt_version : Qt6_12;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -583,13 +584,23 @@ private struct FromFormatRow
     string s, format;
     QTime expected;
 }
+// Qt 6.12 accepts "00" with format "hm" as 00:00; upstream changed this row's
+// expected value from invalid to QTime(0, 0).
+private QTime hmZeroExpected()
+{
+    static if (Qt6_12)
+        return QTime(0, 0);
+    else
+        return invalidTime();
+}
+
 private FromFormatRow[] fromStringFormat_data()
 {
     return [
         // data0
         FromFormatRow("1010", "mmm", QTime(0, 10, 0)),
         // data1
-        FromFormatRow("00", "hm", invalidTime()),
+        FromFormatRow("00", "hm", hmZeroExpected()),
         // data2
         FromFormatRow("10am", "hap", QTime(10, 0, 0)),
         // data3

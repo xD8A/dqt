@@ -11,6 +11,7 @@ import qt.core.global;
 import qt.core.calendar;
 import qt.core.timezone;
 import qt.core.stringview;
+import qt_version : Qt6_12;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -1397,6 +1398,17 @@ private struct FromStringRow
     string s, format;
     QDate expected;
 }
+// Qt 6.12's date parser no longer lets the day field greedily eat the "MMyy"
+// part of "11010" with format "dMMyy": it parses as 1910-10-01 instead of
+// failing.
+private QDate greedyBreakExpected()
+{
+    static if (Qt6_12)
+        return QDate(1910, 10, 1);
+    else
+        return QDate();
+}
+
 private FromStringRow[] fromStringFormat_data()
 {
     QDate defDate = QDate(1900, 1, 1);
@@ -1426,7 +1438,7 @@ private FromStringRow[] fromStringFormat_data()
         // data11
         FromStringRow("-1.01.1", "M.dd.d", QDate()),
         // data12
-        FromStringRow("11010", "dMMyy", QDate()),
+        FromStringRow("11010", "dMMyy", greedyBreakExpected()),
         // data13
         FromStringRow("-2", "d", QDate()),
         // data14

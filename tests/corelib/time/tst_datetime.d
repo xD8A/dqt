@@ -15,7 +15,7 @@ import qt.core.timezone;
 import qt.core.calendar;
 import qt.core.locale;
 import qt.core.datastream;
-import qt_version : Qt6_5, Qt6_7;
+import qt_version : Qt6_5, Qt6_7, Qt6_12;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -2928,7 +2928,13 @@ private TestRows!FssRow fromStringStringFormat_data()
     rows.add("2008-10-13 UTC+01:0011.50", "yyyy-MM-dd thh.mm", offsetQ(2008, 10, 13, 11, 50, 0, 0, 3600));
     // Invalid offsets / time-specs.
     rows.add("2001-09-15T09:33:01.001-50", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
-    rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
+    // Qt 6.12 parses a single-digit offset ("+5") as UTC+05:00 instead of
+    // rejecting it.
+    static if (Qt6_12)
+        rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt",
+                 QDateTime(QDate(2001, 9, 15), QTime(9, 33, 1, 1), QTimeZone(18000)));
+    else
+        rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
     rows.add("2001-09-15T09:33:01.001-701", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
     rows.add("2001-09-15T09:33:01.001+11:570", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
     rows.add("2001-09-15T09:33:01.001+11:5", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
@@ -2947,7 +2953,13 @@ private TestRows!FssRow fromStringStringFormat_data()
     rows.add("2008-10-13 UTC+05:1 11.50", "yyyy-MM-dd t hh.mm", invalidQ());
     rows.add("2001-09-15T09:33:01.001 $", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
     rows.add("2001-09-15T09:33:01.001 1", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
-    rows.add("2008-10-13 UTC+0111.50", "yyyy-MM-dd thh.mm", invalidQ());
+    // Qt 6.12 restrains the offset field's greed: "UTC+0111.50" now parses as
+    // UTC+01:00 with time 11:50 instead of failing.
+    static if (Qt6_12)
+        rows.add("2008-10-13 UTC+0111.50", "yyyy-MM-dd thh.mm",
+                 QDateTime(QDate(2008, 10, 13), QTime(11, 50), QTimeZone(3600)));
+    else
+        rows.add("2008-10-13 UTC+0111.50", "yyyy-MM-dd thh.mm", invalidQ());
     rows.add("2008-10-13 UTC+01:011.50", "yyyy-MM-dd thh.mm", invalidQ());
     rows.add("2001-09-15T09:33:01.001 ", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
 /+ #if QT_CONFIG(timezone) +/
