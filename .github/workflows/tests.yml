@@ -39,10 +39,17 @@ jobs:
       - name: Run corelib/time unittests
         run: |
           set -eux
-          # These minimal images ship Qt under $QTDIR, but that lib directory is
-          # not on the linker's default search path, and they lack the
-          # libstdc++.so development symlink (only the runtime libstdc++.so.6 is
-          # present). Provide both so dub can resolve -lQt6Core and -lstdc++.
+          # The minimal images have no timezone database, so QTimeZone cannot
+          # resolve any zone (systemTimeZone() is invalid, Pacific/Auckland etc.
+          # are unavailable). Install tzdata.
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq tzdata
+
+          # These images ship Qt under $QTDIR, but that lib directory is not on
+          # the linker's default search path, and they lack the libstdc++.so
+          # development symlink (only the runtime libstdc++.so.6 is present).
+          # Provide both so dub can resolve -lQt6Core and -lstdc++.
           QT_LIBS="$(qtpaths6 --query QT_INSTALL_LIBS 2>/dev/null || echo "${QTDIR:-/opt/Qt/current}/lib")"
           STDCPP="$(ls /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libstdc++.so.6 2>/dev/null | head -1)"
           mkdir -p "$HOME/lib"
