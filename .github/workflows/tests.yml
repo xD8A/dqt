@@ -65,7 +65,16 @@ jobs:
           export DFLAGS="-L-L${QT_LIBS} -L-L${HOME}/lib ${DFLAGS:-}"
           export LD_LIBRARY_PATH="${QT_LIBS}:${LD_LIBRARY_PATH:-}"
 
-          dub run --build=unittest :unittest
+          # Zone-dependent tests are guarded by `version (TzData)`; enable them
+          # only when a timezone database is actually present (the minimal
+          # images ship none, in which case those tests are compiled out).
+          if [ -e /usr/share/zoneinfo/UTC ] || [ -e /usr/share/zoneinfo/Etc/UTC ]; then
+            TZDATA_FLAG="--d-version=TzData"
+          else
+            TZDATA_FLAG=""
+          fi
+
+          dub run --build=unittest $TZDATA_FLAG :unittest
 
   time-unittests-arm64:
     name: arm64 ${{ matrix.image }}
@@ -121,4 +130,12 @@ jobs:
           export DFLAGS="-L-L${QT_LIBS} -L-L${HOME}/lib ${DFLAGS:-}"
           export LD_LIBRARY_PATH="${QT_LIBS}:${LD_LIBRARY_PATH:-}"
 
-          dub run --build=unittest --compiler=ldc2 :unittest
+          # Zone-dependent tests are guarded by `version (TzData)`; enable them
+          # only when a timezone database is actually present.
+          if [ -e /usr/share/zoneinfo/UTC ] || [ -e /usr/share/zoneinfo/Etc/UTC ]; then
+            TZDATA_FLAG="--d-version=TzData"
+          else
+            TZDATA_FLAG=""
+          fi
+
+          dub run --build=unittest --compiler=ldc2 $TZDATA_FLAG :unittest

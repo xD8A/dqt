@@ -60,10 +60,11 @@ import std.conv : to;
  * `toString_textDate_extra`, `addDays`, `offsetFromUtc`, `zoneAtTime`,
  * `timeZoneAbbreviation`, `timeZones`, `systemTimeZoneChange`, `operator_eqeq`,
  * `fromStringDateFormat`, `fromStringStringFormat`,
- * `fromStringStringFormat_localTimeZone`, `invalid`) are compiled out on
- * Android with `version (Android) {} else`: Qt's Android build resolves the id
- * through JNI (`QJniObject::fromString` -> `QJniEnvironment`), which needs a
- * `JavaVM`, and the qemu chroot has no ART/JVM, so it aborts with SIGSEGV.
+ * `fromStringStringFormat_localTimeZone`, `invalid`) need a timezone database,
+ * so they are guarded with `version (TzData) { ... }`: Qt's Android build
+ * resolves the id through JNI (`QJniObject::fromString` -> `QJniEnvironment`),
+ * which needs a `JavaVM`, and the qemu chroot has no ART/JVM, so it aborts with
+ * SIGSEGV.
  *
  * BINDING GAP: the following tests cannot be ported with the current D bindings
  * and are recorded rather than dropped:
@@ -725,7 +726,6 @@ private TestRows!MsecsRow setMSecsSinceEpoch_data()
 }
 
 // setMSecsSinceEpoch
-version (Android) {} else
 unittest
 {
     foreach (i, ref r; setMSecsSinceEpoch_data())
@@ -786,9 +786,12 @@ unittest
 
             // Compare result for LocalTime to TimeZone
 /+ #if QT_CONFIG(timezone) +/
-            QDateTime dt2 = QDateTime.create();
-            QTimeZone europe = QTimeZone(qba("Europe/Oslo"));
-            dt2.setTimeZone(europe);
+            version (TzData)
+            {
+                QDateTime dt2 = QDateTime.create();
+                QTimeZone europe = QTimeZone(qba("Europe/Oslo"));
+                dt2.setTimeZone(europe);
+            }
 /+ #endif +/
             dt2.setMSecsSinceEpoch(r.msecs);
             if (r.cet.date().year() >= 1970 || r.cet.date() == r.utc.date())
@@ -800,8 +803,11 @@ unittest
             if (r.cet.date().year() >= 1970 && r.cet.date().year() <= 2037)
                 assert(dt2.time() == r.cet.time(), ctx);
 /+ #if QT_CONFIG(timezone) +/
-            assert(dt2.timeSpec() == TimeSpec.TimeZone, ctx);
-            assert(dt2.timeZone() == europe, ctx);
+            version (TzData)
+            {
+                assert(dt2.timeSpec() == TimeSpec.TimeZone, ctx);
+                assert(dt2.timeZone() == europe, ctx);
+            }
 /+ #endif +/
         }
 
@@ -919,7 +925,6 @@ unittest
 }
 
 // fromSecsSinceEpoch
-version (Android) {} else
 unittest
 {
     const string ctx = "fromSecsSinceEpoch";
@@ -949,15 +954,18 @@ unittest
     assert(!QDateTime.fromSecsSinceEpoch(7199 - maxSeconds, TimeSpec.OffsetFromUTC, -7200).isValid(), ctx);
 
 /+ #if QT_CONFIG(timezone) +/
-    // As for offset, use zones each side of UTC.
-    QTimeZone west = QTimeZone(qba("UTC-02:00"));
-    QTimeZone east = QTimeZone(qba("UTC+02:00"));
-    if (west.isValid() && east.isValid())
+    version (TzData)
     {
-        assert(QDateTime.fromSecsSinceEpoch(maxSeconds, west).isValid(), ctx);
-        assert(!QDateTime.fromSecsSinceEpoch(maxSeconds + 1, east).isValid(), ctx);
-        assert(QDateTime.fromSecsSinceEpoch(-maxSeconds, east).isValid(), ctx);
-        assert(!QDateTime.fromSecsSinceEpoch(-maxSeconds - 1, west).isValid(), ctx);
+        // As for offset, use zones each side of UTC.
+        QTimeZone west = QTimeZone(qba("UTC-02:00"));
+        QTimeZone east = QTimeZone(qba("UTC+02:00"));
+        if (west.isValid() && east.isValid())
+        {
+            assert(QDateTime.fromSecsSinceEpoch(maxSeconds, west).isValid(), ctx);
+            assert(!QDateTime.fromSecsSinceEpoch(maxSeconds + 1, east).isValid(), ctx);
+            assert(QDateTime.fromSecsSinceEpoch(-maxSeconds, east).isValid(), ctx);
+            assert(!QDateTime.fromSecsSinceEpoch(-maxSeconds - 1, west).isValid(), ctx);
+        }
     }
 /+ #endif +/
 }
@@ -1047,7 +1055,6 @@ unittest
 }
 
 // toString_isoDate_extra
-version (Android) {} else
 unittest
 {
     const string ctx = "toString_isoDate_extra";
@@ -1055,21 +1062,24 @@ unittest
     assert(dt.toString(DateFormat.ISODate) == "1970-01-01T00:00:00Z", ctx);
 
 /+ #if QT_CONFIG(timezone) +/
-    QTimeZone pst = QTimeZone(qba("America/Vancouver"));
-    if (pst.isValid())
+    version (TzData)
     {
-        QDateTime d2 = QDateTime.fromMSecsSinceEpoch(0, pst);
-        assert(d2.toString(DateFormat.ISODate) == "1969-12-31T16:00:00-08:00", ctx);
-    } else {
-        gate("toString_isoDate_extra", "Missed zone test: no America/Vancouver zone available");
-    }
-    QTimeZone cet = QTimeZone(qba("Europe/Berlin"));
-    if (cet.isValid())
-    {
-        QDateTime d2 = QDateTime.fromMSecsSinceEpoch(0, cet);
-        assert(d2.toString(DateFormat.ISODate) == "1970-01-01T01:00:00+01:00", ctx);
-    } else {
-        gate("toString_isoDate_extra", "Missed zone test: no Europe/Berlin zone available");
+        QTimeZone pst = QTimeZone(qba("America/Vancouver"));
+        if (pst.isValid())
+        {
+            QDateTime d2 = QDateTime.fromMSecsSinceEpoch(0, pst);
+            assert(d2.toString(DateFormat.ISODate) == "1969-12-31T16:00:00-08:00", ctx);
+        } else {
+            gate("toString_isoDate_extra", "Missed zone test: no America/Vancouver zone available");
+        }
+        QTimeZone cet = QTimeZone(qba("Europe/Berlin"));
+        if (cet.isValid())
+        {
+            QDateTime d2 = QDateTime.fromMSecsSinceEpoch(0, cet);
+            assert(d2.toString(DateFormat.ISODate) == "1970-01-01T01:00:00+01:00", ctx);
+        } else {
+            gate("toString_isoDate_extra", "Missed zone test: no Europe/Berlin zone available");
+        }
     }
 /+ #endif +/
 }
@@ -1132,7 +1142,6 @@ unittest
 }
 
 // toString_textDate_extra
-version (Android) {} else
 unittest
 {
     const string ctx = "toString_textDate_extra";
@@ -1149,35 +1158,38 @@ unittest
     assert(!endsWithGmt(dt), ctx);
 
 /+ #if QT_CONFIG(timezone) +/
-    if (QTimeZone.systemTimeZone().offsetFromUtc(dt))
-        assert(dt.toString() != QString("Thu Jan 1 00:00:00 1970"), ctx);
-    else
-        assert(dt.toString() == QString("Thu Jan 1 00:00:00 1970"), ctx);
+    version (TzData) {
+        if (QTimeZone.systemTimeZone().offsetFromUtc(dt))
+            assert(dt.toString() != QString("Thu Jan 1 00:00:00 1970"), ctx);
+        else
+            assert(dt.toString() == QString("Thu Jan 1 00:00:00 1970"), ctx);
 
-    QTimeZone pst = QTimeZone(qba("America/Vancouver"));
-    if (pst.isValid()) {
-        dt = QDateTime.fromMSecsSinceEpoch(0, pst);
-        assert(dt.toString() == QString("Wed Dec 31 16:00:00 1969 UTC-08:00"), ctx);
-        dt = dt.toLocalTime();
-        assert(!endsWithGmt(dt), ctx);
+        QTimeZone pst = QTimeZone(qba("America/Vancouver"));
+        if (pst.isValid()) {
+            dt = QDateTime.fromMSecsSinceEpoch(0, pst);
+            assert(dt.toString() == QString("Wed Dec 31 16:00:00 1969 UTC-08:00"), ctx);
+            dt = dt.toLocalTime();
+            assert(!endsWithGmt(dt), ctx);
+        } else {
+            gate("toString_textDate_extra", "Missed zone test: no America/Vancouver zone available");
+        }
+        QTimeZone cet = QTimeZone(qba("Europe/Berlin"));
+        if (cet.isValid()) {
+            dt = QDateTime.fromMSecsSinceEpoch(0, cet);
+            assert(dt.toString() == QString("Thu Jan 1 01:00:00 1970 UTC+01:00"), ctx);
+            dt = dt.toLocalTime();
+            assert(!endsWithGmt(dt), ctx);
+        } else {
+            gate("toString_textDate_extra", "Missed zone test: no Europe/Berlin zone available");
+        }
     } else {
-        gate("toString_textDate_extra", "Missed zone test: no America/Vancouver zone available");
+/+ #else // timezone +/
+        if (dt.offsetFromUtc())
+            assert(dt.toString() != QString("Thu Jan 1 00:00:00 1970"), ctx);
+        else
+            assert(dt.toString() == QString("Thu Jan 1 00:00:00 1970"));
+/+ #endif +/
     }
-    QTimeZone cet = QTimeZone(qba("Europe/Berlin"));
-    if (cet.isValid()) {
-        dt = QDateTime.fromMSecsSinceEpoch(0, cet);
-        assert(dt.toString() == QString("Thu Jan 1 01:00:00 1970 UTC+01:00"), ctx);
-        dt = dt.toLocalTime();
-        assert(!endsWithGmt(dt), ctx);
-    } else {
-        gate("toString_textDate_extra", "Missed zone test: no Europe/Berlin zone available");
-    }
-/+ #else // timezone
-    if (dt.offsetFromUtc())
-        QVERIFY(dt.toString() != QLatin1String("Thu Jan 1 00:00:00 1970"));
-    else
-        QCOMPARE(dt.toString(), QLatin1String("Thu Jan 1 00:00:00 1970"));
-#endif +/
     dt = QDateTime.fromMSecsSinceEpoch(0, TimeSpec.UTC);
     assert(endsWithGmt(dt), ctx);
 }
@@ -1276,7 +1288,6 @@ unittest
 /+ #endif +/
 
 // addDays
-version (Android) {} else
 unittest
 {
     const string ctx = "addDays";
@@ -1328,15 +1339,17 @@ unittest
     assert(dt2.offsetFromUtc() == 60 * 60, ctx);
 
 /+ #if QT_CONFIG(timezone) +/
-    QByteArray oslo = qba("Europe/Oslo");
-    QTimeZone cet = QTimeZone(oslo);
-    if (cet.isValid()) { 
-        dt1 = QDate(2022,1,10).startOfDay(cet); 
-        dt2 = dt1.addDays(2);
-        assert(dt2.date() == QDate(2022, 1, 12), ctx);
-        assert(dt2.time() == QTime(0, 0), ctx);
-        assert(dt2.timeSpec() == TimeSpec.TimeZone, ctx);
-        assert(dt2.timeZone() == cet, ctx);
+    version (TzData) {
+        QByteArray oslo = qba("Europe/Oslo");
+        QTimeZone cet = QTimeZone(oslo);
+        if (cet.isValid()) { 
+            dt1 = QDate(2022,1,10).startOfDay(cet); 
+            dt2 = dt1.addDays(2);
+            assert(dt2.date() == QDate(2022, 1, 12), ctx);
+            assert(dt2.time() == QTime(0, 0), ctx);
+            assert(dt2.timeSpec() == TimeSpec.TimeZone, ctx);
+            assert(dt2.timeZone() == cet, ctx);
+        }
     }
 /+ #endif +/
 
@@ -2379,20 +2392,21 @@ private TestRows!EqDtRow operator_eqeq_data()
         rows.add(QDateTime.fromMSecsSinceEpoch(1_099_186_200_000L),
                         QDateTime.fromMSecsSinceEpoch(1_099_182_600_000L), false);
     }
+/+ #if QT_CONFIG(timezone) +/
+    version (TzData) {
+        const QTimeZone cet = QTimeZone(qba("Europe/Oslo"));
+        if (cet.isValid()) {
+            // CET-fall-back // Sun, 31 Oct 2004, 02:30, both ways round:
+            rows.add(QDateTime.fromMSecsSinceEpoch(1_099_186_200_000L, cet),
+                            QDateTime.fromMSecsSinceEpoch(1_099_182_600_000L, cet), false);
 
-    const QTimeZone cet = QTimeZone(qba("Europe/Oslo"));
-    if (cet.isValid()) {
-        // CET-fall-back // Sun, 31 Oct 2004, 02:30, both ways round:
-        rows.add(QDateTime.fromMSecsSinceEpoch(1_099_186_200_000L, cet),
-                        QDateTime.fromMSecsSinceEpoch(1_099_182_600_000L, cet), false);
-
+        }
     }
-
+/+ #endif +/
     return rows;
 }
 
 // operator_eqeq
-version (Android) {} else
 unittest
 {
     foreach (i, ref r; operator_eqeq_data())
@@ -2706,11 +2720,13 @@ private FdRow[] fromStringDateFormat_data()
         FdRow("2005-06-28T07:57:30,11", ISO, localQ(2005, 6, 28, 7, 57, 30, 110)),
         // ISO 24:00
         FdRow("2012-06-04T24:00:00", ISO, localQ(2012, 6, 5, 0, 0)),
+/+ #if QT_CONFIG(timezone) +/
         // ISO 24:00 in DST (only special if TZ=America/Sao_Paulo)
         FdRow("2008-10-18T24:00", ISO,
               QDateTime(QDate(2008, 10, 19),
                         QTime(QTimeZone.systemTimeZoneId() == qba("America/Sao_Paulo") ? 1 : 0, 0),
                         TimeSpec.LocalTime)),
+/+ #endif +/
         // ISO 24:00 end of month
         FdRow("2012-06-30T24:00:00", ISO, localQ(2012, 7, 1, 0, 0)),
         // ISO 24:00 end of year
@@ -2866,7 +2882,7 @@ private FdRow[] fromStringDateFormat_data()
 }
 
 // fromStringDateFormat
-version (Android) {} else
+version (TzData)
 unittest
 {
     foreach (i, ref r; fromStringDateFormat_data())
@@ -2965,21 +2981,23 @@ private TestRows!FssRow fromStringStringFormat_data()
     rows.add("2008-10-13 UTC+01:011.50", "yyyy-MM-dd thh.mm", invalidQ());
     rows.add("2001-09-15T09:33:01.001 ", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
 /+ #if QT_CONFIG(timezone) +/
-    QTimeZone southBrazil = QTimeZone(qba("America/Sao_Paulo"));
-    if (southBrazil.isValid()) {
-        // spring-forward-midnight
-        rows.add("2008-10-19 23:45.678 America/Sao_Paulo",
-                       "yyyy-MM-dd mm:ss.zzz t",
-                       // That's in the hour skipped - expect the matching time after the spring-forward, in DST:
-                       QDateTime(QDate(2008, 10, 19), QTime(1, 23, 45, 678), southBrazil));
-    }
-    QTimeZone berlintz = QTimeZone(qba("Europe/Berlin"));
-    if (berlintz.isValid()) {
-        // begin-of-high-summer-time-with-tz
-        rows.add("1947-05-11 03:23:45.678 Europe/Berlin",
-                       "yyyy-MM-dd hh:mm:ss.zzz t",
-                       // That's in the hour skipped - expecting an invalid DateTime
-                       QDateTime(QDate(1947, 5, 11), QTime(3, 23, 45, 678), berlintz));
+    version (TzData) {
+        QTimeZone southBrazil = QTimeZone(qba("America/Sao_Paulo"));
+        if (southBrazil.isValid()) {
+            // spring-forward-midnight
+            rows.add("2008-10-19 23:45.678 America/Sao_Paulo",
+                        "yyyy-MM-dd mm:ss.zzz t",
+                        // That's in the hour skipped - expect the matching time after the spring-forward, in DST:
+                        QDateTime(QDate(2008, 10, 19), QTime(1, 23, 45, 678), southBrazil));
+        }
+        QTimeZone berlintz = QTimeZone(qba("Europe/Berlin"));
+        if (berlintz.isValid()) {
+            // begin-of-high-summer-time-with-tz
+            rows.add("1947-05-11 03:23:45.678 Europe/Berlin",
+                        "yyyy-MM-dd hh:mm:ss.zzz t",
+                        // That's in the hour skipped - expecting an invalid DateTime
+                        QDateTime(QDate(1947, 5, 11), QTime(3, 23, 45, 678), berlintz));
+        }
     }
 /+ #endif +/
     rows.add("9999-12-31T23:59:59.999Z", "yyyy-MM-ddThh:mm:ss.zZ", localQ(9999, 12, 31, 23, 59, 59, 999));
@@ -3025,7 +3043,6 @@ private void runFromStringStringFormat()
 }
 
 // fromStringStringFormat
-version (Android) {} else
 unittest
 {
     runFromStringStringFormat();
@@ -3096,7 +3113,7 @@ private TestRows!FssLocalRow fromStringStringFormat_localTimeZone_data()
 }
 
 // fromStringStringFormat_localTimeZone
-version (Android) {} else
+version (TzData)
 unittest
 {
     auto rows = fromStringStringFormat_localTimeZone_data();
@@ -3120,7 +3137,6 @@ unittest
 /+ #endif +/
 
 // offsetFromUtc
-version (Android) {} else
 unittest
 {
     const string ctx = "offsetFromUtc";
@@ -3130,6 +3146,11 @@ unittest
     // Offset constructor
     QDateTime dt1 = QDateTime(QDate(2013, 1, 1), QTime(1, 0), TimeSpec.OffsetFromUTC, 60 * 60);
     assert(dt1.offsetFromUtc() == 60 * 60, ctx);
+/+ #if QT_CONFIG(timezone) +/
+    version (TzData) {
+        assert(dt1.timeZone().isValid());
+    }
+/+ #endif +/
     dt1 = QDateTime(QDate(2013, 1, 1), QTime(1, 0), TimeSpec.OffsetFromUTC, -60 * 60);
     assert(dt1.offsetFromUtc() == -60 * 60, ctx);
 
@@ -3152,17 +3173,20 @@ unittest
         gate("offsetFromUtc/local", "Skipped some tests specific to Central European Time "
                ~ "(CET/CEST), e.g. TZ=Europe/Oslo");
     }
-
-    // QTimeZone-based offsets.
-    QByteArray auckland = qba("Pacific/Auckland");
-    QTimeZone nz = QTimeZone(auckland);
-    if (nz.isValid())
-    {
-        QDateTime dt5 = QDateTime(QDate(2013, 1, 1), QTime(0, 0), nz);
-        assert(dt5.offsetFromUtc() == 46_800, ctx);
-        QDateTime dt6 = QDateTime(QDate(2013, 6, 1), QTime(0, 0), nz);
-        assert(dt6.offsetFromUtc() == 43_200, ctx);
+/+ #if QT_CONFIG(timezone) +/
+    version (TzData) {
+        // QTimeZone-based offsets.
+        QByteArray auckland = qba("Pacific/Auckland");
+        QTimeZone nz = QTimeZone(auckland);
+        if (nz.isValid())
+        {
+            QDateTime dt5 = QDateTime(QDate(2013, 1, 1), QTime(0, 0), nz);
+            assert(dt5.offsetFromUtc() == 46_800, ctx);
+            QDateTime dt6 = QDateTime(QDate(2013, 6, 1), QTime(0, 0), nz);
+            assert(dt6.offsetFromUtc() == 43_200, ctx);
+        }
     }
+/+ #endif +/
 }
 
 // setOffsetFromUtc
@@ -3340,7 +3364,7 @@ private TestRows!ZoneAtTimeRow zoneAtTime_data()
 }
 
 // zoneAtTime
-version (Android) {} else
+version (TzData)
 unittest
 {
     const QTime noon = QTime(12, 0);
@@ -3361,7 +3385,6 @@ unittest
 }
 
 // timeZoneAbbreviation
-version (Android) {} else
 unittest
 {
     const string ctx = "timeZoneAbbreviation";
@@ -3403,15 +3426,19 @@ unittest
         gate("timeZoneAbbreviation/local", "not Central European (CET/CEST)");
     }
 
-    QByteArray berlinId = qba("Europe/Berlin");
-    QTimeZone berlin = QTimeZone(berlinId);
-    if (berlin.isValid())
-    {
-        QDateTime jan = QDate(2013, 1, 1).startOfDay(berlin);
-        QDateTime jul = QDate(2013, 7, 1).startOfDay(berlin);
-        assert(jan.timeZoneAbbreviation() == berlin.abbreviation(jan), ctx);
-        assert(jul.timeZoneAbbreviation() == berlin.abbreviation(jul), ctx);
+/+ #if QT_CONFIG(timezone) +/ 
+    version (TzData) {
+        QByteArray berlinId = qba("Europe/Berlin");
+        QTimeZone berlin = QTimeZone(berlinId);
+        if (berlin.isValid())
+        {
+            QDateTime jan = QDate(2013, 1, 1).startOfDay(berlin);
+            QDateTime jul = QDate(2013, 7, 1).startOfDay(berlin);
+            assert(jan.timeZoneAbbreviation() == berlin.abbreviation(jan), ctx);
+            assert(jul.timeZoneAbbreviation() == berlin.abbreviation(jul), ctx);
+        }
     }
+/+ #endif +/
 }
 
 // getDate
@@ -4213,7 +4240,7 @@ private void tzRestore(QByteArray old)
 }
 
 // systemTimeZoneChange
-version (Android) {} else
+version (TzData) 
 unittest
 {
     const string ctx = "systemTimeZoneChange";
@@ -4298,26 +4325,26 @@ private TestRows!InvalidRow invalid_data()
     // offset
     rows.add(invalidDate.toOffsetFromUtc(3600), TimeSpec.OffsetFromUTC, true);
 /+ #if QT_CONFIG(timezone) +/
-    // CET
-    QTimeZone oslo = QTimeZone(qba("Europe/Oslo"));
-    rows.add(invalidDate.toTimeZone(oslo), TimeSpec.TimeZone, true);
+    version (TzData) {
+        // CET
+        QTimeZone oslo = QTimeZone(qba("Europe/Oslo"));
+        rows.add(invalidDate.toTimeZone(oslo), TimeSpec.TimeZone, true);
 
-    // Crash tests, QTBUG-80146:
-    QTimeZone noZone = QTimeZone.create();
-    // nozone+construct
-    rows.add(QDateTime(QDate(1970, 1, 1), QTime(12, 0), noZone), TimeSpec.TimeZone, false);
-    // nozone+fromMSecs
-    rows.add(QDateTime.fromMSecsSinceEpoch(42, noZone), TimeSpec.TimeZone, false);
-    // tonozone
-    QDateTime valid = QDateTime(QDate(1970, 1, 1), QTime(12, 0), TimeSpec.UTC);
-    rows.add(valid.toTimeZone(noZone), TimeSpec.TimeZone, false);
+        // Crash tests, QTBUG-80146:
+        QTimeZone noZone = QTimeZone.create();
+        // nozone+construct
+        rows.add(QDateTime(QDate(1970, 1, 1), QTime(12, 0), noZone), TimeSpec.TimeZone, false);
+        // nozone+fromMSecs
+        rows.add(QDateTime.fromMSecsSinceEpoch(42, noZone), TimeSpec.TimeZone, false);
+        // tonozone
+        QDateTime valid = QDateTime(QDate(1970, 1, 1), QTime(12, 0), TimeSpec.UTC);
+        rows.add(valid.toTimeZone(noZone), TimeSpec.TimeZone, false);
+    }
 /+ #endif +/
-
     return rows;
 }
 
 // invalid
-version (Android) {} else
 unittest
 {
     foreach (i, ref r; invalid_data())
@@ -4331,7 +4358,9 @@ unittest
             assert(r.when.toMSecsSinceEpoch() == 0, ctx);
         assert(!r.when.isDaylightTime(), ctx);
 /+ #if QT_CONFIG(timezone) +/
-        assert(r.when.timeZone().isValid() == r.goodZone, ctx);
+        version (TzData) {
+            assert(r.when.timeZone().isValid() == r.goodZone, ctx);
+        }
 /+ #endif +/
     }
 }

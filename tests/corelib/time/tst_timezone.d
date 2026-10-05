@@ -63,8 +63,8 @@ import std.conv : to;
  * BINDING GAP: Qt's Android build resolves `QTimeZone` ids through JNI
  * (`QTimeZone(QByteArray)` -> `QJniObject::fromString` -> `QJniEnvironment`),
  * which requires a `JavaVM`. The qemu Android chroot ships no ART/JVM, so
- * constructing any `QTimeZone` aborts with SIGSEGV; every test here is
- * therefore compiled out on Android with `version (Android) {} else`.
+ * constructing any `QTimeZone` aborts with SIGSEGV; every test here needs a
+ * timezone database and is therefore guarded with `version (TzData) { ... }`.
  */
 
 private void gate(string name, string reason)
@@ -87,7 +87,7 @@ private string baStr(const(QByteArray) ba)
 // createTest
 // ---------------------------------------------------------------------------
 
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "createTest";
@@ -188,7 +188,7 @@ unittest
 // nullTest
 // ---------------------------------------------------------------------------
 
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "nullTest";
@@ -379,7 +379,7 @@ unittest
 // ---------------------------------------------------------------------------
 
 // isTimeZoneIdAvailable
-version (Android) {} else
+version (TzData)
 unittest
 {
     foreach (id; QTimeZone.availableTimeZoneIds())
@@ -392,7 +392,7 @@ unittest
 }
 
 // availableTimeZoneIds
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "availableTimeZoneIds";
@@ -571,7 +571,7 @@ private UtcOffsetRow[] utcOffsetId_data()
 }
 
 // utcOffsetId
-version (Android) {} else
+version (TzData)
 unittest
 {
     foreach (i, ref r; utcOffsetId_data())
@@ -736,7 +736,7 @@ private TransitionZoneRow[] transitionEachZone_data()
 }
 
 // transitionEachZone
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "transitionEachZone";
@@ -807,7 +807,7 @@ private CheckOffsetRow[] checkOffset_data()
 }
 
 // checkOffset
-version (Android) {} else
+version (TzData)
 unittest
 {
     bool tested = false;
@@ -837,7 +837,7 @@ unittest
 // ---------------------------------------------------------------------------
 
 // stressTest
-version (Android) {} else
+version (TzData)
 unittest
 {
     foreach (id; QTimeZone.availableTimeZoneIds())
@@ -893,7 +893,7 @@ unittest
 // windowsId
 // ---------------------------------------------------------------------------
 
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "windowsId";
@@ -960,7 +960,7 @@ unittest
 // ---------------------------------------------------------------------------
 
 // malformed
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "malformed";
@@ -1063,7 +1063,7 @@ private LocaleNameRow[] localeSpecificDisplayName_data()
 }
 
 // localeSpecificDisplayName
-version (Android) {} else
+version (TzData)
 unittest
 {
     // This test checks that QTimeZone::displayName() correctly uses the

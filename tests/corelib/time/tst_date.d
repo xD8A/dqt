@@ -53,10 +53,10 @@ import std.conv : to;
  * skipped with a reason when the prerequisite is missing.
  *
  * BINDING GAP: the `startOfDay`/`endOfDay` timezone tests construct `QTimeZone`
- * from an id; on Android Qt resolves the id through JNI
- * (`QJniObject::fromString` -> `QJniEnvironment`), which needs a `JavaVM`. The
- * qemu Android chroot has no ART/JVM, so those tests are compiled out on
- * Android with `version (Android) {} else`.
+ * from an id and need a timezone database; on Android Qt resolves the id
+ * through JNI (`QJniObject::fromString` -> `QJniEnvironment`), which needs a
+ * `JavaVM`, and the qemu Android chroot has no ART/JVM, so those tests are
+ * guarded with `version (TzData) { ... }`.
  */
 
 private void gate(string name, string reason)
@@ -593,7 +593,7 @@ private StartOfDayRow[] startOfDay_endOfDay_data()
 }
 
 // startOfDay_endOfDay (timezone-dependent)
-version (Android) {} else
+version (TzData)
 unittest
 {
     auto rows = startOfDay_endOfDay_data();
@@ -689,7 +689,6 @@ private QDate[] startOfDay_endOfDay_fixed_data()
 }
 
 // startOfDay_endOfDay_fixed
-version (Android) {} else
 unittest
 {
     const string ctx = "startOfDay_endOfDay_fixed";
@@ -721,19 +720,21 @@ unittest
         assert(date.endOfDay(TimeSpec.LocalTime).date() == date, ctx);
 
 /+ #if QT_CONFIG(timezone) +/
-        QByteArray osloId = qba("Europe/Oslo");
-        QTimeZone cet = QTimeZone(osloId);
-        if (cet.isValid())
+        version (TzData) 
         {
-            assert(date.startOfDay(cet).date() == date, ctx);
-            assert(date.endOfDay(cet).date() == date, ctx);
+            QByteArray osloId = qba("Europe/Oslo");
+            QTimeZone cet = QTimeZone(osloId);
+            if (cet.isValid())
+            {
+                assert(date.startOfDay(cet).date() == date, ctx);
+                assert(date.endOfDay(cet).date() == date, ctx);
+            }
         }
 /+ #endif +/
     }
 }
 
 // startOfDay_endOfDay_bounds
-version (Android) {} else
 unittest
 {
     const string ctx = "startOfDay_endOfDay_bounds";
@@ -762,10 +763,13 @@ unittest
     assert(qdteMin.startOfDay(TimeSpec.LocalTime).date() == qdteMin, ctx);
 
 /+ #if QT_CONFIG(timezone) +/
-    QByteArray berlinId = qba("Europe/Berlin");
-    QTimeZone berlinZone = QTimeZone(berlinId);
-    if (berlinZone.isValid())
-        assert(qdteMin.startOfDay(berlinZone).date() == qdteMin, ctx);
+    version (TzData)
+    {
+        QByteArray berlinId = qba("Europe/Berlin");
+        QTimeZone berlinZone = QTimeZone(berlinId);
+        if (berlinZone.isValid())
+            assert(qdteMin.startOfDay(berlinZone).date() == qdteMin, ctx);
+    }
 /+ #endif +/
 }
 
