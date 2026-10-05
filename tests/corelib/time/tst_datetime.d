@@ -785,10 +785,10 @@ unittest
             assert(localDt.timeSpec() == TimeSpec.LocalTime, ctx);
 
             // Compare result for LocalTime to TimeZone
+            QDateTime dt2 = QDateTime.create();
 /+ #if QT_CONFIG(timezone) +/
             version (TzData)
             {
-                QDateTime dt2 = QDateTime.create();
                 QTimeZone europe = QTimeZone(qba("Europe/Oslo"));
                 dt2.setTimeZone(europe);
             }
