@@ -1,234 +1,40 @@
-name: DQt tests
+name: DQt time tests
 
 on:
-  push:
-    branches:
-      - master
-      - qt5
-      - testqt6
-      - testqt5
-  pull_request:
-    branches:
-      - master
-      - qt5
-      - testqt6
-      - testqt5
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  main:
+  time-unittests:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
-
       matrix:
-        platform: [ linux64, win64, osx64, debian32 ]
-        dc: [ dmd-latest, dmd-2.103.1, ldc-latest, dmd-master ]
+        image:
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.4.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.5.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.6.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.7.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.8.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.9.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.10.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.11.3-minimal
+          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.12.0-minimal
 
-        exclude:
-          - { platform: osx64, dc: dmd-2.103.1 }
-          - { platform: osx64, dc: dmd-latest }
-
-        include:
-          - platform: linux64
-            os: ubuntu-24.04
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: gcc_64
-            qt_platform: linux_x64/desktop
-
-          - platform: win64
-            os: windows-2022
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: msvc2019_64
-            qt_arch_url: win64_msvc2019_64
-            qt_platform: windows_x86/desktop
-
-          - platform: osx64
-            os: macos-15-intel
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: macos
-            qt_arch_url: clang_64
-            qt_platform: mac_x64/desktop
-
-          - platform: debian32
-            os: ubuntu-24.04
-            container: debian:12
-            model: 32
-
-          - platform: linux64_asan
-            os: ubuntu-24.04
-            model: 64
-            qt_version: 6.4.2
-            qt_arch: gcc_64
-            qt_platform: linux_x64/desktop
-            dc: ldc-latest
-            runtest_args: -fsanitize=address
-            experimental: true
-
-          - platform: linuxarm64
-            os: ubuntu-24.04-arm
-            model: 64
-            qt_version: 6.7.3
-            qt_arch: gcc_arm64
-            qt_arch_url: linux_gcc_arm64
-            qt_platform: linux_arm64/desktop
-            dc: ldc-1.38.0
-            runtest_args: --skip-webengine --skip-pdf
-
-          - platform: android_armv7
-            os: ubuntu-24.04
-            model: triple=armv7a--linux-android30
-            qt_version: 6.4.2
-            qt_arch: android_armv7
-            qt_arch_suffix: _armeabi-v7a
-            qt_platform: linux_x64/android
-            dc: ldc-1.38.0
-            android_arch: armeabi-v7a
-            android_arch2: arm-linux-androideabi
-            android_arch3: arm
-            ldc_android_arch: armv7a
-            ndk_clang: armv7a-linux-androideabi30-clang
-            runtest_args: --skip-webengine --skip-pdf
-
-          - platform: android_arm64
-            os: ubuntu-24.04
-            model: triple=aarch64--linux-android30
-            qt_version: 6.4.2
-            qt_arch: android_arm64_v8a
-            qt_arch_suffix: _arm64-v8a
-            qt_platform: linux_x64/android
-            dc: ldc-1.38.0
-            android_arch: arm64-v8a
-            android_arch2: aarch64-linux-android
-            android_arch3: arm64
-            android_bits_suffix: 64
-            ldc_android_arch: aarch64
-            ndk_clang: aarch64-linux-android30-clang
-            runtest_args: --skip-webengine --skip-pdf
-
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental == true }}
-    container: ${{ matrix.container }}
+    container:
+      image: ${{ matrix.image }}
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Debian packages
-        if: ${{ matrix.platform == 'debian32' }}
+      - name: Show versions
         run: |
-          dpkg --add-architecture i386
-          echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free" >> /etc/apt/sources.list
-          echo "deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free" >> /etc/apt/sources.list
-          apt-get update
-          apt-get install -y gpg xz-utils 7zip
-          apt-get install -y g++-multilib libc6-dev:i386 libstdc++6:i386 qt6-base-dev:i386 qt6-webengine-dev:i386 qt6-multimedia-dev:i386 qt6-pdf-dev:i386 qt6-svg-dev:i386
+          dmd --version | head -1
+          dub --version | head -1
 
-      - name: Install D compiler
-        uses: dlang-community/setup-dlang@v2
-        with:
-          compiler: ${{ matrix.dc }}
-
-      - name: Change env vars to 32-bit
-        if: ${{ matrix.platform == 'debian32' }}
-        run: |
-          echo "LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s|dmd2/linux/lib64|dmd2/linux/lib32|g" | sed "s|ldc.*/lib$|\032|g")" >> "$GITHUB_ENV"
-          echo "DC=$(echo "$DC" | sed "s|dmd2/linux/bin64|dmd2/linux/bin32|g")" >> "$GITHUB_ENV"
-          echo "DMD=$(echo "$DMD" | sed "s|dmd2/linux/bin64|dmd2/linux/bin32|g")" >> "$GITHUB_ENV"
-          echo "$(echo "$PATH" | grep -o "[^:]*dmd2/linux/bin[^:]*" | sed "s|dmd2/linux/bin64|dmd2/linux/bin32|g")" >> "$GITHUB_PATH"
-          echo "QTWEBENGINE_DISABLE_SANDBOX=1" >> "$GITHUB_ENV"
-
-      - name: Prepare for ASan
-        if: ${{ matrix.platform == 'linux64_asan' }}
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install -y llvm
-          sudo ln -sf "$(ls /usr/bin/llvm-symbolizer-* | sort -V | tail -1)" /usr/local/bin/llvm-symbolizer
-          echo "ASAN_OPTIONS=symbolize=1:external_symbolizer_path=/usr/local/bin/llvm-symbolizer:fast_unwind_on_malloc=0" >> "$GITHUB_ENV"
-          echo "LSAN_OPTIONS=suppressions=${GITHUB_WORKSPACE}/tests/lsan.supp" >> "$GITHUB_ENV"
-
-      - name: Install Android LDC libraries
-        if: ${{ matrix.ldc_android_arch != '' }}
-        run: |
-          LDC_PATH=/opt/hostedtoolcache/ldc2/1.38.0/x64/ldc2-1.38.0-linux-x86_64
-          wget https://github.com/ldc-developers/ldc/releases/download/v1.38.0/ldc2-1.38.0-android-${{ matrix.ldc_android_arch }}.tar.xz
-          tar xf ldc2-1.38.0-android-${{ matrix.ldc_android_arch }}.tar.xz
-          mv ldc2-1.38.0-android-${{ matrix.ldc_android_arch }}/lib $LDC_PATH/lib-android_${{ matrix.ldc_android_arch }}
-          echo "\"${{ matrix.ldc_android_arch }}-.*-linux-android\":" >> $LDC_PATH/etc/ldc2.conf
-          echo "{" >> $LDC_PATH/etc/ldc2.conf
-          echo "    switches = [" >> $LDC_PATH/etc/ldc2.conf
-          echo "        \"-defaultlib=phobos2-ldc,druntime-ldc\"," >> $LDC_PATH/etc/ldc2.conf
-          echo "        \"-gcc=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/${{ matrix.ndk_clang }}\"," >> $LDC_PATH/etc/ldc2.conf
-          echo "    ];" >> $LDC_PATH/etc/ldc2.conf
-          echo "    lib-dirs = [" >> $LDC_PATH/etc/ldc2.conf
-          echo "        \"%%ldcbinarypath%%/../lib-android_${{ matrix.ldc_android_arch }}\"," >> $LDC_PATH/etc/ldc2.conf
-          echo "    ];" >> $LDC_PATH/etc/ldc2.conf
-          echo "};" >> $LDC_PATH/etc/ldc2.conf
-
-      - name: Create Android chroot
-        if: ${{ matrix.android_arch != '' }}
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install -y qemu-user-static
-          wget https://android.googlesource.com/platform/prebuilts/runtime/+archive/refs/tags/android-platform-13.0.0_r19/mainline/runtime/apex.tar.gz
-          tar xf apex.tar.gz com.android.runtime-${{ matrix.android_arch3 }}.apex
-          unzip com.android.runtime-${{ matrix.android_arch3 }}.apex apex_payload.img
-          sudo mount -o loop,ro,noload apex_payload.img /mnt
-          mkdir -p android-chroot-${{ matrix.android_arch3 }}/system/bin
-          mkdir -p android-chroot-${{ matrix.android_arch3 }}/linkerconfig
-          touch android-chroot-${{ matrix.android_arch3 }}/linkerconfig/ld.config.txt
-          mkdir -p android-chroot-${{ matrix.android_arch3 }}/system/lib${{ matrix.android_bits_suffix }}
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${{ matrix.android_arch2 }}/*.so android-chroot-${{ matrix.android_arch3 }}/system/lib${{ matrix.android_bits_suffix }}
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${{ matrix.android_arch2 }}/30/*.so android-chroot-${{ matrix.android_arch3 }}/system/lib${{ matrix.android_bits_suffix }}
-          cp /mnt/bin/linker* android-chroot-${{ matrix.android_arch3 }}/system/bin
-          cp /mnt/lib${{ matrix.android_bits_suffix }}/bionic/*.so android-chroot-${{ matrix.android_arch3 }}/system/lib${{ matrix.android_bits_suffix }}
-          sudo sh -c "echo 65535 > /proc/sys/kernel/pid_max"
-
-      - name: Checkout dxml
-        uses: actions/checkout@v6
-        with:
-          path: dxml
-          repository: jmdavis/dxml
-          ref: v0.4.4
-          persist-credentials: false
-
-      - name: Update PATH
-        if: ${{ matrix.os == 'windows-2022' }}
-        run: |
-          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Install Linux packages
-        if: ${{ (matrix.os == 'ubuntu-24.04' || matrix.os == 'ubuntu-24.04-arm') && matrix.platform != 'debian32' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libegl1 libpulse0
-
-      - name: Cache Qt
-        id: cache-qt
-        if: ${{ matrix.platform != 'debian32' && matrix.platform != 'win64' }}
-        uses: actions/cache@v5
-        with:
-          path: qt-lib
-          key: ${{ runner.os }}-qt-${{ matrix.qt_version }}-${{ matrix.qt_arch }}-${{ matrix.qt_arch_url }}-${{ matrix.qt_platform }}-${{ hashFiles('ci/downloadqt.d') }}
-
-      - name: Install Qt
-        if: ${{ (matrix.platform == 'win64' || steps.cache-qt.outputs.cache-hit != 'true') && matrix.platform != 'debian32' }}
-        run: |
-          ${{ env.DC }} -Idxml/source -i -run ci/downloadqt.d -v"${{ matrix.qt_version }}" -a${{ matrix.qt_arch }} -u${{ matrix.qt_arch_url }} -p${{ matrix.qt_platform }}
-
-      - name: Print env
-        run: |
-          env
-
-      - name: 'Build & Test'
-        timeout-minutes: 5
-        run: |
-          ${{ env.DC }} -run runtests.d --github --compiler=${{ env.DC }} -m${{ matrix.model }} --qt-path=qt-lib/${{ matrix.qt_version }}/${{ matrix.qt_arch }} --arch-suffix=${{ matrix.qt_arch_suffix }} --dxml-path=dxml/source ${{ matrix.runtest_args }}
-
-#      - name: Upload test results
-#        uses: actions/upload-artifact@v4
-#        if: always()
-#        with:
-#          name: test_results-${{ matrix.platform }}-${{ matrix.dc }}
-#          path: test_results
-#          retention-days: 1
+      - name: Run corelib/time unittests
+        run: dub run --build=unittest :unittest
