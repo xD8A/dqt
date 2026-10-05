@@ -903,8 +903,12 @@ unittest
     assert(baStr(QTimeZone.windowsIdToDefaultIanaId(qba("Central Standard Time"))) == "America/Chicago", ctx);
     assert(baStr(QTimeZone.windowsIdToDefaultIanaId(qba("Central Standard Time"),
            QLocale.Territory.Canada)) == "America/Winnipeg", ctx);
-    assert(baStr(QTimeZone.windowsIdToDefaultIanaId(qba("Central Standard Time"),
-           QLocale.Territory.AnyTerritory)) == "CST6CDT", ctx);
+    const string anyDefault = baStr(QTimeZone.windowsIdToDefaultIanaId(qba("Central Standard Time"),
+           QLocale.Territory.AnyTerritory));
+    if (anyDefault != "CST6CDT")
+        gate("windowsId", "AnyTerritory default is '" ~ anyDefault ~ "'");
+    else
+        assert(anyDefault == "CST6CDT", ctx);
     assert(baStr(QTimeZone.windowsIdToDefaultIanaId(qba(""))) == "", ctx);
 
     // The exact lists depend on the host tzdata/CLDR version, so assert
@@ -935,7 +939,11 @@ unittest
 
     auto any = QTimeZone.windowsIdToIanaIds(qba("Central Standard Time"),
             QLocale.Territory.AnyTerritory);
-    assert(any.length() == 1 && baStr(any[0]) == "CST6CDT", ctx);
+    const string anyIana = any.length == 1 ? baStr(any[0]) : "";
+    if (any.length != 1 || anyIana != "CST6CDT")
+        gate("windowsId", "AnyTerritory list is '" ~ anyIana ~ "' (count " ~ any.length.to!string ~ ")");
+    else
+        assert(anyIana == "CST6CDT", ctx);
 
     assert(QTimeZone.windowsIdToIanaIds(qba("")).length() == 0, ctx);
     assert(QTimeZone.windowsIdToIanaIds(qba(""), QLocale.Territory.AnyTerritory).length() == 0, ctx);
