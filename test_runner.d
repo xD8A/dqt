@@ -1,7 +1,5 @@
 module test_runner;
 
-import qt_version : Qt6_5, qtVersion;
-
 // Importing the modules is enough: run with
 // `dub run --build=unittest :unittest` (`-unittest`), so DRuntime runs every
 // module's unittest blocks automatically before `main`.
@@ -12,15 +10,13 @@ import corelib.tools.tst_pointf;
 import corelib.tools.tst_rect;
 import corelib.tools.tst_size;
 import corelib.tools.tst_sizef;
-// Time tests are compiled out on Qt 6.5+ (see PR notes on version skew).
-static if (!Qt6_5) {
-    import corelib.time.tst_calendar;
-    import corelib.time.tst_date;
-    import corelib.time.tst_time;
-    import corelib.time.tst_datetime;
-    import corelib.time.tst_timezone;
-}
+import corelib.time.tst_calendar;
+import corelib.time.tst_date;
+import corelib.time.tst_time;
+import corelib.time.tst_datetime;
+import corelib.time.tst_timezone;
 
+import qt_version : qtVersion;
 import std.stdio : stdout, writeln;
 
 // DRuntime calls module constructors before the module unittest blocks, so this

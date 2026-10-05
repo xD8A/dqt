@@ -15,7 +15,7 @@ import qt.core.timezone;
 import qt.core.calendar;
 import qt.core.locale;
 import qt.core.datastream;
-import qt_version : Qt6_7;
+import qt_version : Qt6_5, Qt6_7;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -1282,8 +1282,9 @@ unittest
         QString f = QString("yyyy-MM-dd hh:mm:ss tt");
         // Qt 6.7 changed how a repeated 't' is formatted, so only check the
         // historical "UTCUTC" expectation on older Qt releases.
-        static if (Qt6_7)
-            gate("toString_strformat", "repeated 't' formatting differs on Qt >= 6.7");
+        // Q: Already fixed in Qt 6.5?
+        static if (Qt6_5)
+            gate("toString_strformat", "repeated 't' formatting differs on Qt >= 6.5");
         else
             assert(testDateTime.toString(f, cal) == "2013-01-01 01:02:03 UTCUTC", ctx);
     }

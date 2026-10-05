@@ -15,15 +15,15 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.4.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.4.3-minimal
           - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.5.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.6.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.7.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.8.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.9.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.10.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.11.3-minimal
-          - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.12.0-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.6.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.7.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.8.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.9.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.10.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.11.3-minimal
+          # - ghcr.io/xd8a/ubuntu-dmd:2.113.0-qt6.12.0-minimal
 
     container:
       image: ${{ matrix.image }}
