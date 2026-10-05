@@ -46,10 +46,8 @@ import std.conv : to;
  * BINDING GAP: the spring-forward transition-hole checks in `timeZones`
  * (constructing a QDateTime for a local time the zone skipped, and its
  * round-trip) depend on QDateTime's disambiguation of non-existent local times.
- * The linuxarm64 CI job runs the Qt 6.7.3 runtime against the 6.4.2 headers
- * (`tests.yml`), and 6.7 resolves those local times differently, so the checks
- * are skipped there via a `version (linux) version (AArch64)` constant
- * (`skipQt67TransitionHole`).
+ * Qt 6.7 keeps such local times valid instead, so the checks are compiled out
+ * for Qt >= 6.7 via the compile-time `Qt6_7` flag (`qt_version.d`).
  *
  * BINDING GAP: `QDateTime.fromMSecsSinceEpoch` aborts with SIGSEGV (null deref)
  * in Qt 6.4 on Android under qemu while converting the extreme pre-epoch
@@ -95,20 +93,6 @@ private void gate(string name, string reason)
 {
     writeln("SKIP ", name, " - ", reason);
 }
-
-// The linuxarm64 CI job runs the Qt 6.7.3 runtime against the 6.4.2 headers
-// (see tests.yml); 6.7 disambiguates the non-existent local times inside a
-// spring-forward gap differently from 6.4, so the matching `timeZones` checks
-// are compiled out there (see the BINDING GAP note in the module header).
-version (linux)
-{
-    version (AArch64)
-        private enum skipQt67TransitionHole = true;
-    else
-        private enum skipQt67TransitionHole = false;
-}
-else
-    private enum skipQt67TransitionHole = false;
 
 struct TestRows(T)
 {
@@ -4114,9 +4098,9 @@ unittest
     assert(atGap.time() == QTime(3, 0), ctx);
     assert(atGap.toMSecsSinceEpoch() == gapMSecs, ctx);
     // - Test transition hole, setting 02:00:00 is invalid
-    static if (skipQt67TransitionHole)
+    static if (Qt6_7)
     {
-        gate("timeZones", "transition-hole disambiguation differs on Qt 6.7 / linuxarm64");
+        gate("timeZones", "transition-hole disambiguation differs on Qt >= 6.7");
     }
     else
     {
