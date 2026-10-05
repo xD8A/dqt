@@ -51,6 +51,12 @@ jobs:
           # development symlink (only the runtime libstdc++.so.6 is present).
           # Provide both so dub can resolve -lQt6Core and -lstdc++.
           QT_LIBS="$(qtpaths6 --query QT_INSTALL_LIBS 2>/dev/null || echo "${QTDIR:-/opt/Qt/current}/lib")"
+          # Qt version of the image. test_runner.d reads it at compile time via
+          # `import(".qt_version.txt")` (`stringImportPaths` in dub.json) and
+          # prints it at startup; the Qt6_x flags gate version-specific tests.
+          QT_VERSION="$(qmake6 -query QT_VERSION 2>/dev/null || qmake -query QT_VERSION 2>/dev/null || echo unknown)"
+          echo "$QT_VERSION" > .qt_version.txt
+
           STDCPP="$(ls /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libstdc++.so.6 2>/dev/null | head -1)"
           mkdir -p "$HOME/lib"
           ln -sf "$STDCPP" "$HOME/lib/libstdc++.so"

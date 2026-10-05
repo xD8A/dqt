@@ -46,7 +46,8 @@
 			"targetType": "executable",
 			"mainSourceFile": "test_runner.d",
 			"sourcePaths": [],
-			"importPaths": ["tests"],
+			"importPaths": ["tests", "."],
+			"stringImportPaths": ["."],
 			"sourceFiles": [
 				"tests/corelib/time/tst_calendar.d",
 				"tests/corelib/time/tst_date.d",

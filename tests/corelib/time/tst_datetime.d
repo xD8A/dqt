@@ -15,8 +15,7 @@ import qt.core.timezone;
 import qt.core.calendar;
 import qt.core.locale;
 import qt.core.datastream;
-import qt.core.libraryinfo : QLibraryInfo;
-import qt.core.versionnumber : QVersionNumber;
+import qt_version : Qt6_7;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -110,20 +109,6 @@ version (linux)
 }
 else
     private enum skipQt67TransitionHole = false;
-
-// The Qt library actually loaded at runtime, as opposed to DQt's compile-time
-// header version (`QT_VERSION`). Needed because the CI matrix may run 6.4.2
-// headers against a newer runtime (e.g. 6.7.3); a compile-time `QT_VERSION`
-// check would then stay at the header value and not reflect the runtime.
-private bool runtimeVersionAtLeast(int major, int minor, int patch = 0)
-{
-    QVersionNumber v = QLibraryInfo.version_();
-    if (v.majorVersion() != major)
-        return v.majorVersion() > major;
-    if (v.minorVersion() != minor)
-        return v.minorVersion() > minor;
-    return v.microVersion() >= patch;
-}
 
 struct TestRows(T)
 {
@@ -1296,8 +1281,8 @@ unittest
         // TODO QTBUG-95966: find better ways to use repeated 't'
         QString f = QString("yyyy-MM-dd hh:mm:ss tt");
         // Qt 6.7 changed how a repeated 't' is formatted, so only check the
-        // historical "UTCUTC" expectation on older runtimes.
-        if (runtimeVersionAtLeast(6, 7))
+        // historical "UTCUTC" expectation on older Qt releases.
+        static if (Qt6_7)
             gate("toString_strformat", "repeated 't' formatting differs on Qt >= 6.7");
         else
             assert(testDateTime.toString(f, cal) == "2013-01-01 01:02:03 UTCUTC", ctx);
@@ -4011,8 +3996,13 @@ unittest
         QByteArray id = nzStdOffset.timeZone().id();
         // Qt 6.7 normalizes whole-hour offset ids differently (e.g. "UTC+12:00").
         const string actualId = baStr(id);
-        if (actualId != "UTC+12" && runtimeVersionAtLeast(6, 7))
-            gate("timeZones", "offset zone id is '" ~ actualId ~ "' on Qt >= 6.7");
+        static if (Qt6_7)
+        {
+            if (actualId != "UTC+12")
+                gate("timeZones", "offset zone id is '" ~ actualId ~ "' on Qt >= 6.7");
+            else
+                assert(id == qba("UTC+12"), ctx);
+        }
         else
             assert(id == qba("UTC+12"), ctx);
     }

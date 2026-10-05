@@ -10,8 +10,7 @@ import qt.core.locale;
 import qt.core.namespace;
 import qt.core.global;
 import qt.core.list;
-import qt.core.libraryinfo : QLibraryInfo;
-import qt.core.versionnumber : QVersionNumber;
+import qt_version : Qt6_7;
 import std.stdio : writeln;
 import std.conv : to;
 
@@ -73,20 +72,6 @@ private void gate(string name, string reason)
     writeln("SKIP ", name, " - ", reason);
 }
 
-
-// The Qt library actually loaded at runtime, as opposed to DQt's compile-time
-// header version (`QT_VERSION`). Needed because the CI matrix may run 6.4.2
-// headers against a newer runtime (e.g. 6.7.3); a compile-time `QT_VERSION`
-// check would then stay at the header value and not reflect the runtime.
-private bool runtimeVersionAtLeast(int major, int minor, int patch = 0)
-{
-    QVersionNumber v = QLibraryInfo.version_();
-    if (v.majorVersion() != major)
-        return v.majorVersion() > major;
-    if (v.minorVersion() != minor)
-        return v.minorVersion() > minor;
-    return v.microVersion() >= patch;
-}
 
 private QByteArray qba(string s)
 {
@@ -602,8 +587,13 @@ unittest
             assert(!zone.hasDaylightTime(), ctx);
             // Qt 6.7 normalizes some CLDR/Windows ids differently (e.g. "UTC-11").
             const string actualId = baStr(zone.id());
-            if (actualId != r.id && runtimeVersionAtLeast(6, 7))
-                gate("utcOffsetId/" ~ r.id, "zone id normalized to '" ~ actualId ~ "' on Qt >= 6.7");
+            static if (Qt6_7)
+            {
+                if (actualId != r.id)
+                    gate("utcOffsetId/" ~ r.id, "zone id normalized to '" ~ actualId ~ "' on Qt >= 6.7");
+                else
+                    assert(actualId == r.id, ctx);
+            }
             else
                 assert(actualId == r.id, ctx);
         }
