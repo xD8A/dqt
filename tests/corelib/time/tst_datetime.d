@@ -2929,10 +2929,12 @@ private TestRows!FssRow fromStringStringFormat_data()
     // Invalid offsets / time-specs.
     rows.add("2001-09-15T09:33:01.001-50", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
     // Qt 6.12 parses a single-digit offset ("+5") as UTC+05:00 instead of
-    // rejecting it.
+    // rejecting it. The parser represents it as a UTC offset (upstream uses
+    // QTimeZone::fromSecondsAheadOfUtc, whose QDateTime is OffsetFromUTC), so
+    // match that representation with offsetQ.
     static if (Qt6_12)
         rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt",
-                 QDateTime(QDate(2001, 9, 15), QTime(9, 33, 1, 1), QTimeZone(18000)));
+                 offsetQ(2001, 9, 15, 9, 33, 1, 1, 18_000));
     else
         rows.add("2001-09-15T09:33:01.001+5", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
     rows.add("2001-09-15T09:33:01.001-701", "yyyy-MM-ddThh:mm:ss.zt", invalidQ());
@@ -2954,10 +2956,10 @@ private TestRows!FssRow fromStringStringFormat_data()
     rows.add("2001-09-15T09:33:01.001 $", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
     rows.add("2001-09-15T09:33:01.001 1", "yyyy-MM-ddThh:mm:ss.z t", invalidQ());
     // Qt 6.12 restrains the offset field's greed: "UTC+0111.50" now parses as
-    // UTC+01:00 with time 11:50 instead of failing.
+    // UTC+01:00 with time 11:50 instead of failing (OffsetFromUTC, as above).
     static if (Qt6_12)
         rows.add("2008-10-13 UTC+0111.50", "yyyy-MM-dd thh.mm",
-                 QDateTime(QDate(2008, 10, 13), QTime(11, 50), QTimeZone(3600)));
+                 offsetQ(2008, 10, 13, 11, 50, 0, 0, 3600));
     else
         rows.add("2008-10-13 UTC+0111.50", "yyyy-MM-dd thh.mm", invalidQ());
     rows.add("2008-10-13 UTC+01:011.50", "yyyy-MM-dd thh.mm", invalidQ());
