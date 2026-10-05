@@ -85,6 +85,13 @@ import std.conv : to;
  * Environment-dependent expectations are runtime-gated with `gate()`.
  */
 
+// Qt private API: `qTzSet()` is declared in QtCore's private header
+// `private/qglobal_p.h` as `Q_CORE_EXPORT void qTzSet();`. It re-reads the
+// process time zone after `qputenv("TZ", ...)`, so it is bound here in the test
+// rather than exposed from the public core bindings. The symbol is exported by
+// Qt6Core on all platforms.
+extern(C++) void qTzSet();
+
 private void gate(string name, string reason)
 {
     writeln("SKIP ", name, " - ", reason);
@@ -3325,23 +3332,24 @@ private TestRows!ZoneAtTimeRow zoneAtTime_data()
         // Bracket a few noteworthy transitions:
         // before:ACWST
         rows.add("Australia/Eucla", QDate(1974, 10, 26), 31_500); // 8:45
-        // after:ACWST
-        rows.add("Australia/Eucla", QDate(1974, 10, 27), 35_100); // 9:45
-        // before:NPT
-        rows.add("Asia/Kathmandu", QDate(1985, 12, 31), 19_800); // 5:30
+        version (Android) { } else { // QTBUG-68835; gets offset 0 for the affected tests.
+            // after:ACWST
+            rows.add("Australia/Eucla", QDate(1974, 10, 27), 35_100); // 9:45
+            // before:NPT
+            rows.add("Asia/Kathmandu", QDate(1985, 12, 31), 19_800); // 5:30
+        }
         // after:NPT
         rows.add("Asia/Kathmandu", QDate(1986, 1, 1), 20_700); // 5:45
         // The two that have skipped a day (each):
-        // before:LINT
-        rows.add("Pacific/Kiritimati", QDate(1994, 12, 30), -36_000);
+        version (Android) { } else { // QTBUG-68835; gets offset 0 for the affected tests.
+            // before:LINT
+            rows.add("Pacific/Kiritimati", QDate(1994, 12, 30), -36_000);
+        }
         // after:LINT
         rows.add("Pacific/Kiritimati", QDate(1995, 1, 2), 14 * 3600);
         // after:WST
         rows.add("Pacific/Apia", QDate(2011, 12, 31), 14 * 3600);
     }
-
-    // Note: on Android these would take offset 0 (QTBUG-68835); the Android
-    // NONANDROIDROW variants are not modelled here.
     // before:WST
     rows.add("Pacific/Apia", QDate(2011, 12, 29), -36_000);
     return rows;

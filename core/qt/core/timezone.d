@@ -106,6 +106,7 @@ public:
     { d.swap(other.d); } +/
 
     /+bool operator ==(ref const(QTimeZone) other) const;+/
+    bool opEquals(ref const(QTimeZone) other) const;
     /+bool operator !=(ref const(QTimeZone) other) const;+/
 
     bool isValid() const;
@@ -179,11 +180,6 @@ public:
     }
 #endif +/
 
-    // QTimeZone::operator== is an exported non-virtual const member; bind it
-    // directly to D's opEquals so `==`/`!=` call Qt's implementation. Qt
-    // defines no ordering for QTimeZone, so there is deliberately no opCmp.
-    pragma(mangle, mangleOpEquals("QTimeZone"))
-    bool opEquals(ref const(QTimeZone) other) const;
 
 private:
     this(ref QTimeZonePrivate dd);
