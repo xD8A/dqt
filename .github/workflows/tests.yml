@@ -55,7 +55,7 @@ jobs:
           # Qt version of the image. test_runner.d reads it at compile time via
           # `import(".qt_version.txt")` (`stringImportPaths` in dub.json) and
           # prints it at startup; the Qt6_x flags gate version-specific tests.
-          QT_VERSION="$(qmake6 -query QT_VERSION 2>/dev/null || qmake -query QT_VERSION 2>/dev/null || echo unknown)"
+          QT_VERSION="$(qtpaths6 --query QT_VERSION 2>/dev/null || qmake6 -query QT_VERSION 2>/dev/null || qmake -query QT_VERSION 2>/dev/null || echo unknown)"
           echo "$QT_VERSION" > .qt_version.txt
 
           STDCPP="$(ls /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libstdc++.so.6 2>/dev/null | head -1)"
@@ -117,7 +117,7 @@ jobs:
           QT_LIBS="$(qtpaths6 --query QT_INSTALL_LIBS 2>/dev/null || echo "${QTDIR:-/opt/Qt/current}/lib")"
           # Qt version of the image; read at compile time by test_runner.d via
           # `import(".qt_version.txt")` and used by the Qt6_x gates.
-          QT_VERSION="$(qmake6 -query QT_VERSION 2>/dev/null || qmake -query QT_VERSION 2>/dev/null || echo unknown)"
+          QT_VERSION="$(qtpaths6 --query QT_VERSION 2>/dev/null || qmake6 -query QT_VERSION 2>/dev/null || qmake -query QT_VERSION 2>/dev/null || echo unknown)"
           echo "$QT_VERSION" > .qt_version.txt
 
           STDCPP="$(ls /usr/lib/aarch64-linux-gnu/libstdc++.so.6 /lib/aarch64-linux-gnu/libstdc++.so.6 2>/dev/null | head -1)"
