@@ -9,6 +9,7 @@ import qt.core.string;
 import qt.core.bytearray;
 import qt.core.stringlist;
 import qt.core.anystringview;
+import qt_version : Qt6_10;
 import std.stdio : writeln;
 import std.conv : to;
 import std.string : fromStringz;
@@ -116,7 +117,15 @@ private void checkYear(QCalendar cal, int year, bool normal, string ctx)
         assert(!cal.isDateValid(year, i, 0), c);
         assert(!cal.isDateValid(year, i, last + 1), c);
         if (normal)
-            assert(cal.daysInMonth(i) == last, c);
+        {
+            // Qt 6.10 makes the unspecified-year `daysInMonth(month)` the
+            // longest that month gets, so it may exceed this normal year's
+            // value (upstream: QCOMPARE_GE).
+            static if (Qt6_10)
+                assert(cal.daysInMonth(i) >= last, c);
+            else
+                assert(cal.daysInMonth(i) == last, c);
+        }
     }
     assert(sum == days, c);
 }
@@ -237,15 +246,35 @@ unittest
         assert(cal.monthsInYear(QCalendar.Unspecified) == cal.maximumMonthsInYear(), ctx);
         for (int month = cal.maximumMonthsInYear(); month > 0; month--)
         {
-            const int days = cal.daysInMonth(month);
-            int count = 0;
-            // 19 years = one Metonic cycle (used by some lunar calendars)
-            for (int k = 19; k > 0; --k)
+            static if (Qt6_10)
             {
-                if (cal.daysInMonth(month, thisYear - k) == days)
-                    count++;
+                // Qt 6.10: the unspecified-year `daysInMonth(month)` is the
+                // longest that month gets (upstream: hitMax / days < maxDays).
+                const int maxDays = cal.daysInMonth(month);
+                bool hitMax = false;
+                // 19 years = one Metonic cycle (used by some lunar calendars)
+                for (int k = 19; k > 0; --k)
+                {
+                    const int days = cal.daysInMonth(month, thisYear - k);
+                    if (days == maxDays)
+                        hitMax = true;
+                    else
+                        assert(days < maxDays, ctx);
+                }
+                assert(hitMax, ctx ~ ": Default daysInMonth() should be the longest that month gets");
             }
-            assert(count > 9, ctx ~ ": Default daysInMonth() should be for a normal year");
+            else
+            {
+                const int days = cal.daysInMonth(month);
+                int count = 0;
+                // 19 years = one Metonic cycle (used by some lunar calendars)
+                for (int k = 19; k > 0; --k)
+                {
+                    if (cal.daysInMonth(month, thisYear - k) == days)
+                        count++;
+                }
+                assert(count > 9, ctx ~ ": Default daysInMonth() should be for a normal year");
+            }
         }
     }
 }
