@@ -12,7 +12,8 @@ import corelib.tools.tst_pointf;
 import corelib.tools.tst_rect;
 import corelib.tools.tst_size;
 import corelib.tools.tst_sizef;
-static if (Qt6_5) {} else {
+// Time tests are compiled out on Qt 6.5+ (see PR notes on version skew).
+static if (!Qt6_5) {
     import corelib.time.tst_calendar;
     import corelib.time.tst_date;
     import corelib.time.tst_time;
