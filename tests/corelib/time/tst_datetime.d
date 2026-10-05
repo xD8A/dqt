@@ -3954,7 +3954,7 @@ unittest
 
 /+ #if QT_CONFIG(timezone) +/
 // timeZones
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "timeZones";

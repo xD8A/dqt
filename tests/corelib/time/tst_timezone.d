@@ -265,7 +265,7 @@ unittest
 // systemZone
 // ---------------------------------------------------------------------------
 
-version (Android) {} else
+version (TzData)
 unittest
 {
     const string ctx = "systemZone";
