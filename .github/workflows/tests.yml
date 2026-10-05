@@ -37,4 +37,18 @@ jobs:
           dub --version | head -1
 
       - name: Run corelib/time unittests
-        run: dub run --build=unittest :unittest
+        run: |
+          set -eux
+          # These minimal images ship Qt under $QTDIR, but that lib directory is
+          # not on the linker's default search path, and they lack the
+          # libstdc++.so development symlink (only the runtime libstdc++.so.6 is
+          # present). Provide both so dub can resolve -lQt6Core and -lstdc++.
+          QT_LIBS="$(qtpaths6 --query QT_INSTALL_LIBS 2>/dev/null || echo "${QTDIR:-/opt/Qt/current}/lib")"
+          STDCPP="$(ls /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libstdc++.so.6 2>/dev/null | head -1)"
+          mkdir -p "$HOME/lib"
+          ln -sf "$STDCPP" "$HOME/lib/libstdc++.so"
+
+          export DFLAGS="-L-L${QT_LIBS} -L-L${HOME}/lib ${DFLAGS:-}"
+          export LD_LIBRARY_PATH="${QT_LIBS}:${LD_LIBRARY_PATH:-}"
+
+          dub run --build=unittest :unittest
